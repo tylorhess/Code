@@ -1,0 +1,25 @@
+-# gem "haml"	(haml.info)
+	-# made for Ruby on Rails
+	$ gem install haml
+	-#---------- or ----------#-
+	$ subl Gemfile
+			...
+			gem "haml"
+	-# once installed: all ".html.haml" --compiled to--> ".html"
+	-# `$ rails generate ...` to use .haml instead of .erb
+	$ subl config/application.rb
+			config.generators do |g|
+			  g.template_engine :haml
+			  # you can also specify a different test framework or ORM here
+			  # g.test_framework  :rspec
+			  # g.orm             :mongoid
+			end
+
+	-# also has command line version
+	$ haml input.haml output.html
+	$ haml --help
+
+
+-# gem "haml-rails"		(github.com/indirect/haml-rails)
+	$ subl Gemfile
+			gem "haml-rails"

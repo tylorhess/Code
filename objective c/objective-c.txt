@@ -1,0 +1,426 @@
+/*
+everything in c is in objective c (plus adds a lot of syntax for classes, methods, etc.)
+unique: properties, dynamic binding
+property... method to set property, method to get property
+in this class, access all instance data using property (there are instance variables, we won't use)
+header file (.h) = PUBLIC information
+implementation file (.m) = PRIVATE implementation
+
+garbage collection = sweep through heap, look for things that aren't pointed to, clean them up
+NO garbage collection in objective c
+reference counting = keep count of actual properties point to a object, when count goes to zero, clean up object from heap
+(Old days of iOS 6, you had to count yourself. every time you create pointer --> increment count, stop point --> decrement count, count = 0 clean it up)
+nil = 0 
+goal: objective c reads like English
+send message to nil returns 0 = nil = NO
+if things are nil, no huge crashes (i.e. - empty array in "for... in..." loop, no crash)
+sending messages to nil is okay
+never send a message to nil that returns a struct (returns undefined)
+
+*/
+
+/*
+Object Oriented:
+	initialization
+	instantiation
+	introspection
+	inheritance
+	static/class vs instance (methods/attributes/properties)
+	iteration
+	recursion
+	hash tables/hash maps
+	list comprehensions
+	higher-order functions
+	lambda expressions
+	
+*/
+
+---------- For Loop ----------
+for (NSObject myObj in myArray) {}
+for (id myObj in myArray) {} // if objects of different type
+
+---------- C Primitive Types ----------
+// No strong/weak because it's not in the heap, so no pointer (*) and no reference count
+@property (nonatomic) int myInt;
+
+_Bool
+signed		// (default) so NEVER USE IT
+unsigned	// only positive numbers
+(unsigned) char			// 8-bit int
+(unsigned) short		// 16-bit int
+(unsigned) int			// 16-bit int
+(unsigned) long			// 32-bit int
+(unsigned) long long	// 64-bit int
+float		// floating-point decimal (small)
+double		// floating-point decimal (medium)
+long double	// floating-point decimal (large)
+struct
+
+---------- C Primitive Types ----------
+// No strong/weak because it's not in the heap, so no pointer (*) and no reference count
+@property (nonatomic) BOOL myBool;
+
+id			// class-less (like "var" in javascript) "pointer to object of unknown/undisclosed type/class"
+BOOL		// YES = true = 1?; NO = false = 0 = nil
+NSInteger	//  (signed)  32-bit on 32-bit systems, 64-bit on 64-bit systems
+NSUInteger	// (unsigned) 32-bit on 32-bit systems, 64-bit on 64-bit systems
+NSRange
+CGFloat		// typedef float|double as CGFloat
+SEL			// @selector
+enum
+
+---------- shorthand ----------
+@"string";
+@(3);
+@[@"this",@"is a",@"array"];
+@{@"key":@"value", @"I'm a":@"Dictionary"};
+
+---------- Struct ----------
+struct Struct_Name // sort of like a class
+{
+	int x, y;
+	...add more primitives
+	// can pass struct as argument/parameter
+	// can return struct
+	// no methods/functions
+	// no inheritance or polymorphism
+	// no == or isEqualTo:
+};
+struct Struct_Name myStruct;
+myStruct.x = 0;
+myStruct.y = myStruct.x + 1;
+
+// typedef = "alias"
+typedef struct Struct_Name StructName; // typedef "struct Struct_Name" as "StructName"
+// Now, you can use it like a class
+StructName myStruct;
+myStruct.x = 0;
+myStruct.y = 1;
+
+// shorthand
+typedef struct { int x,y;} StructName;
+StructName myStruct;
+myStruct.x = 0;
+myStruct.y = 1;
+
+
+
+---------- NSObject ----------
+// NEVER separate alloc & init
+
+NSObject *myObject = [[NSObject alloc] init]; // = new Class();
+
+BOOL myBool = [objectInstance1 isEqualTo:objectInstance2]; // == only compares if pointers are exactly the same
+
+// All Foundations Classes
+NSObject newObj = myObj.copy; // [myObj copy]; // immutable (unchangeable) whether or not you sent it to a mutable (changeable) class
+NSObject newMutObj = myObj.mutableCopy; // [myObj mutableCopy]; // mutable (changeable) whether or not you sent it to a immutable (unchangeable) class
+NSString *myString = myObj.description; // [myObj description];
+// if (myObj is an Array) {not "deep" copy; aka - does not apply mutable/immutable to contents of array}
+
+// introspection
+[myObj class]; // returns Class (calls "class method" "class")
+BOOL myBool = [myObj isKindOfClass:[ClassName class]];		// includes inheritance
+BOOL myBool = [myObj isMemberOfClass:[ClassName class]];	// excludes inheritance
+BOOL myBool = [myObj respondsToSelector:@selector(stringWithFormat:)];// "i don't what class you are, but do you respond to this message (i.e. - stringWithFormat:)?"
+
+SEL mySelector = @selector(mutableCopy);
+SEL mySelector = @selector(stringWithFormat:);
+SEL mySelector = @selector(moveTo:withColorPen:);
+
+// casting objects
+id obj = ...;
+NSString myString = (NSString *)obj; // careful! (recommended use: introspection)
+
+// inheritance
+@interface Vehicle
+- (void)move;
+@end
+@interface Ship
+- (void)shoot; 
+@end
+
+Ship *ship = [[Ship alloc] init];
+[ship shoot]; // Ship implements shoot
+[ship move]; // Ship inherits move from Vehicle
+
+Vehicle *vehicle = ship; //  Ship "isa" Vehicle
+[vehicle shoot];	// compiler warning ("crash") because compiler thinks vehicle is a Vehicle, and Vehicles can't shoot
+					// but runs at runtime because vehicle actually is (also) Ship
+id myId = ...;
+[myId shoot]; // NO compiler warning, but will crash at runtime (because it doesn't know whether it's a Ship or not)
+[myId someMethodThatNoObjImplements]; // YES compiler warning
+
+Ship *notShip = (Ship *)@"string";
+[notShip shoot]; // NO compiler warning, but will crash at runtime
+
+[(id)@"string" shoot]; // NO compiler warning, but will crash at runtime
+
+---------- NSString ----------
+NSString *myString = @"non-mutable/unchangeable";
+NSString *myString = [[NSString alloc] init];
+NSString *myString = [NSString stringWithFormat:...]; //same
+NSString *myString = [[NSString alloc] initWithFormat:...]; // same (Apple appears to be moving toward this)
+
+NSMutableString *myString = @"mutable/changeable";
+
+BOOL myBool = [@"string" isEqualToString:@"string"]; // == only compares if pointers are exactly the same (NOT string comparison)
+NSMutableString *myString = [myNonMutableString mutableCopy];
+[NSString stringWithFormat:@"%d %@", myInt, myObject];
+NSArray *myArray = [myString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]; // returns array of words
+
+// NSMutableString-only
+[@"begin " stringByAppendingString:@"end"];
+
+---------- NSAttributedString ----------
+// NOT NSString (does not inherit from NSString)
+// string where each char has dictionary of attributes (like font, color, underline, bold, ...)
+// new to iOS 6
+NSString *myString = myAttString.string; // [myAttString string];
+NSDictionary *myDict = [myAttString attributesAtIndex:myInt effectiveRange:myRange];
+
+// NSMutableAttributedString-only
+[myAttString addAttributes:myDict range:myRange]; // overwrites previous (no need to remove first)
+[myAttString setAttributes:myDict range:myRange]; // set = removeAll + add
+[myAttString removeAttributes:myString range:myRange];
+// methods exist to append, insert, delete, & replace characters 
+// or call mutableString method (and it magically preserves attributes)
+NSMutableString *myString = myAttString.mutableString; // [myAttString mutableString];
+
+@{
+NSFontAttributeName : [UIFont systemFontOfSize:12],
+NSForegroundColorAttributeName : [UIColor blueColor], // font fill color (except if positive NSStrokeWidthAttributeName)
+NSStrokeWidthAttributeName : @-5, // positive = stroke(outline)-only & transparent fill, negative = stroke & fill
+NSStrokeColorAttributeName : [UIColor orangeColor], // font outline color
+NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle), // @(NSUnderlineStyleNone)
+NSBackgroundColorAttributeName : [UIColor transparentYellow] // background fill
+}
+
+---------- NSArray ---------- // index lookup
+// objects in an array can be any class (even different classes)
+NSArray *myArray = @[@"0",@"1",@"2",@"..."];	// non-mutable/unchangeable
+NSArray *myArray = [NSArray array];
+NSArray *myArray = [[NSArray alloc] init];
+NSArray *myArray = [NSArray arrayWithObject:myObject];
+
+NSMutableArray *myArray = @[@"0",@"1",@"2",@"..."];	// mutable/changeable
+NSMutableArray *myArray = [NSMutableArray array];
+NSMutableArray *myArray = [[NSMutableArray alloc] init];
+NSMutableArray *myArray = [NSMutableArray arrayWithCapacity:myInt]; // improves performance
+
+myArray[intIndex]; // [myArray objectAtIndex:intIndex];
+[myArray containsObject:myObject];
+
+myArray.lastObject; // [myArray lastObject]; //
+[myArray makeObjectsPerformSelector:@selector(mutableCopy:)];
+[myArray makeObjectsPerformSelector:@selector(addObject:) withObject:myObject];
+NSString *myString = [myArray componentsJoinedByString:@", "];
+NSUInteger myInt = myArray.count; // [myArray count];
+NSArray *newArray = [myArray sortedArrayUsingSelector:@selector(methodName)];
+
+// NSMutableArray-only
+[myArray addObject:myObject];
+[myArray insertObject:myObject atIndex:intIndex];
+[myArray removeObjectAtIndex:intIndex];
+
+---------- NSNumber ----------
+NSNumber *myNumber = @36; // iOS 6
+NSNumber *myNumber = @(myInt_Float_Double_Bool_Enum_Property_Or_Method);
+NSNumber *myNumber = [[NSNumber alloc] init];
+NSNumber *myNumber = [NSNumber numberWithInt:36];
+
+int myInt = [myNumber intValue];
+float myFloat = [myNumber floatValue];
+double myDouble = [myNumber doubleValue];
+...
+
+---------- NSDictionary ---------- // key-value lookup
+// is a simple hash table
+// keys must be unique (NOT isEqual:)
+// keys must be objects that implement "hash" and "isEqual:" (not many other options besides @"string")
+NSDictionary *myDict = @{ @"key1" : @"value1", @"key2" : 2, @"key3" : [UIColor greenColor]};
+NSMutableDictionary *myDict = @{ @"key1" : @"value1", @"key2" : 2, @"key3" : [UIColor greenColor]}; // .mutableCopy;???
+
+UIColor *myColor = myDict[@"key3"]; // [myDict objectForKey:@"key3"];
+NSUInteger myInt = myDict.count; // [myDict count];
+
+// NSMutableDictionary-only
+[myDict setObject:myObj forKey:myString];
+[myDict removeObjectForKey:myString];
+myDict.removeAllObjects; // [myDict removeAllObjects];
+[myDict addEntriesFromDictionary:anotherDictionary];
+
+for (NSString *key in myDict)
+{	id value = myDict[key];
+}
+
+---------- NSUserDefaults ----------
+// is a Dictionary that persists after close/open app
+// NOT A DATABASE; very inefficient; don't store large things
+// one-and-only instance in whole app (global variable)
+[[NSUserDefaults standardUserDefaults] setArray:myArray forKey:@"key"]; // set
+[[NSUserDefaults standardUserDefaults] setDouble:myObj forKey:@"key"];  // set
+[[NSUserDefaults standardUserDefaults] setObject:myPropertyList forKey:@"key"]; // set; MUST BE a Property List
+NSInteger myInt = [[NSUserDefaults standardUserDefaults] integerForKey:@"key"]; // get
+NSArray *myArray = [[NSUserDefaults standardUserDefaults] arrayForKey:@"key"];  // get; returns nil if not array
+
+//REMEMBER TO SAVE CHANGES!!!
+[[NSUserDefaults standardUserDefaults] synchronize];
+
+---------- "Property List" ----------
+// any object graph (i.e. - NSArray, NSDictionary, NSString) that only contains:
+// NSArray, NSDictionary, NSNumber, NSString, NSDate, NSData, or their subclasses (mutable)
+// so long as NSArray's NSArrays contain above objects, and both key & value of NSDictionary contain above
+[... writeToFile:myPropertyList atomically:myBool]; 
+
+---------- NSRange ----------
+// NOT an object (is a C struct)
+typedef struct {
+	NSUInteger location;
+	NSUInteger length;
+} NSRange;
+
+// example
+NSRange myRange = [longString rangeOfString:shortString];
+if (myRange.location == NSNotFound)
+{	// shortString NOT in longString
+} else
+{	// shortString is in longString
+}
+
+// when returning NSRange, use NSRangePointer
+NSRangePointer = (NSRange *) // (via typedef)
+
+---------- Classes ----------
+[self class] // returns the class of self
+[[self class] methodName] // like self.propertyName
+// works with inheritance (calls the method name of the subclass)
+
+---------- PUBLIC Header File (.h) ----------
+#import <Foundation/Foundation.h> // = #import <Foundation/NSObject.h>, plus everything else you'll need
+
+// PUBLIC @property and (-/+) methods
+// note: SuperClass is public
+// note: SuperClass is single-inheritance, use protocols for multiple inheritance
+@interface Class : SuperClass // SuperClass = NSObject (top-level base class for all objects in iOS)
+
+// PUBLIC @property
+// readonly vs. readwrite
+// strong = i want object to stay in heap as long as i point to it (reference count > 0)
+// weak = only keep in heap as long as someone else is pointing at it strongly, else set my pointer to nil
+// nonatomic = OUR default (we wish it were THE default) because we don't need all the locking that goes along with making this thing threadsafe
+// "NSObject *" = pointer to object (instead of the object itself)
+// Remember: primitives omit pointer (*)
+@property (readonly, strong, nonatomic, getter=isPropertyName, setter=setPropertyName) NSObject *propertyName;
+// classInstance.propertyName += classInstance.propertyName;
+
+// PUBLIC method
+// (void) if no returnType (because omitting it means something else)... don't omit it in this class
+// Remember: primitives omit pointer (*)
+
+// dash (-) method = "instance method"; method sent to instance of a class
+// call method using message: [classInstance methodName:arg1 secondArg:arg2 ...];
+// compiler will let you call method using .dot notation (classInstance.methodName), if it looks like a getter
+- (ReturnType *)methodName:(ArgumentType *)arg1 secondArg:(ArgumentType *)arg2 ...;
+
+// RARELY USED
+// plus (+) method = "class method"; sent to class, not to instance
+// used for things like: utility method, allocate and/or initialize in some special way, etc.
+// call method using message: [Class classMethodName:arg1 secondArg:arg2 ...];
+- (ReturnType *)classMethodName:(ArgumentType *)arg1 secondArg:(ArgumentType *)arg2 ...;
+
+
+@end
+
+---------- PRIVATE Implementation File (.m) ----------
+#import "Class.h"
+
+// PRIVATE @property and (-/+) methods
+@interface Class()
+	// PRIVATE same as PUBLIC
+@end
+
+// DEFINE ALL PUBLIC and PRIVATE @property and (-/+) methods
+@implementation Class
+
+// ----- INIT Override -----
+// id = "unknown class" (technically: "pointer to an object of any class")
+// designated initializer = overrides init (one per class)
+//		should set: init -> return nil
+// convenience initializer = optional init (none or more per class)
+- (id)initOverrideWithArgument:(ArgumentType *)arg1 secondArg:(ArgumentType *)arg2 ...
+{
+    // if (overridden init || designated initializer)
+        // if (super has designated init)
+            self = [super designatedInit]; // instead of init
+        // else
+            self = [super init];
+    // else if (convenience initializer)
+        self = [self init];
+    
+	if (self) // almost never nil, but could happen
+	{  // add initialization stuff
+	}
+	return self;
+}
+
+// ----- SETTER and GETTER -----
+// AUTOMATICALLY GENERATED behind the scenes for every @property
+// but you can override by manually adding these methods yourself
+
+// SYNTHESIZE
+// you MUST include @synthesize..., if you choose to manually override both SETTER and GETTER methods
+@synthesize propertyName = _propertyName;
+
+// SETTER
+- (void)setPropertyName:(NSObject *)propertyName	
+{	_propertyName = propertyName;
+}
+
+// GETTER
+- (NSObject *)propertyName
+{	return _propertyName;
+}
+
+// GETTER - lazy instantiation
+// lazy instantiation: instantiate = "to create" the object; lazy = created when needed
+// recommendation: do this all the time
+// prevents "if (self.propertyName = nil)" everywhere
+- (NSObject *)propertyName
+{	if (!_propertyName) _propertyName = [[ClassName alloc] init];
+	return _propertyName;
+}
+
+
+@end
+
+---------- NSValue ----------
+// NSValue = generic wrapper for some non-object, non-primitive data types (i.e. - C structs)
+NSValue *edgeInsetsObject = [NSValue valueWithUIEdgeInsets:UIEdgeInsetsMake(1,1,1,1)];
+
+---------- NSData ---------- // save/restore/transmit raw data
+---------- NSDate ---------- // Date and Time
+---------- NSDateFormatter ----------
+---------- NSDateComponents ----------
+---------- NSCalendar ----------
+---------- NSSet/NSMutableSet ----------
+---------- NSOrderedSet/NSMutableOrderedSet ----------
+
+---------- UIColor ----------
+UIColor *myColor = [UIColor initWithRed:myFloat green:myFloat blue:myFloat alpha:myFloat ]; // 0.0 <= myFloat <= 1.0
+UIColor *myColor = [UIColor greenColor]; // "standard" color
+UIColor *myColor = [UIColor lightTextColor]; // "system" color
+UIColor *myColor = [otherColor colorWithAlphaComponent:0.3];
+UIColor *myColor = myUIImage; // fills with pattern = image
+
+---------- UIImage ----------
+UIImage *cardBackImage = [UIImage imageNamed:@"cardback.png"];
+[cardButton setImage:cardBackImage forState:UIControlStateNormal];
+
+---------- UIFont ----------
+// font includes its point size
+// you can't create a font object, then specify its size
+systemFontOfSize:
+boldSystemFontOfSize:
+italicSystemFontOfSize:
+

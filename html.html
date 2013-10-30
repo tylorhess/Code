@@ -1,0 +1,21 @@
+<!-- id vs. name -->
+<div id="id"></div>	<!-- uniquely identifies html element -->
+<form action="file.php" method="post">	<!-- default: action="#" method="get" -->
+	<input id="id1" name="name1">		<!-- php: $_POST["name1"]; -->
+	<textarea id="id2" name="name2">
+	<select id="id3" name="name3">
+</form>
+
+<!-- css
+place as high in the <head> as possible 
+-->
+
+<!-- javascript
+place as low  in the <body> as possible (faster load time)
+minify & gzip .js files
+document.write(); not recommended
+-->
+<script src="file.js"></script>		<!-- best: because you can run validation and compression tools on .js file -->
+<script></script>					<!-- okay: best to separate html, css, and js -->
+<!-- don't use: <script type="text/javascript"></script>, especially if both "type" & "src" used, file type comes from server, ignores html "type" attribute -->
+

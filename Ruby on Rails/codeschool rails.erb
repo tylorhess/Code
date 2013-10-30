@@ -1,0 +1,470 @@
+<%
+CRUD = create, read, update, delete
+########## create ##########
+t = Tweet.new		# assumes "tweets" database (lowercase, plural)
+t.attr = "string"
+#t.id created automatically
+t.save
+---------- same as ----------
+t = Tweet.new(:attr => "string")
+t.save
+---------- same as ----------
+Tweet.create(:attr => "string")
+
+########## read ##########
+Tweet.find(id)
+Tweet.find(id1, id2, id3, ...)	# returns array
+Tweet.first
+Tweet.last
+Tweet.all
+Tweet.count
+Tweet.order(:attr)
+Tweet.limit(10)
+Tweet.where(:attr => 'value')
+Tweet.order(:attr).limit(10)	# first 10
+Tweet.where(:attr => 'value').order(:attr).limit(10) # first 10 where attr = value 
+
+########## update ##########
+t = Tweet.find(3)
+t.attr1 = "new string"
+t.attr2 = "new string"
+t.save					# returns false if unable to save
+---------- same as ----------
+t = Tweet.find(3)
+t.attributes = {	# curly brace
+	:attr1 => "new string"
+	:attr2 => "new string"
+}
+t.save
+---------- same as ----------
+t = Tweet.find(3)
+t.update_attributes( # parenthesis
+	:attr1 => "new string"
+	:attr2 => "new string"
+)
+
+########## delete ##########
+t = Tweet.find(3)
+t.destroy
+---------- same as ----------
+Tweet.find(3).destroy
+
+Tweet.destroy_all
+
+# MVC = Model, View, Controller
+########## Model ##########
+zombie_twitter/app/model/tweet.rb
+class Tweet < ActiveRecord::Base	# Tweet inherits from ActiveRecord::Base
+									# "tweets" database (of Tweet objects)
+	validates_presence_of :attr		# attr = "required" (attr must be non-nil to save to database) 
+	validates_numericality_of :attr	# attr must be number
+	validates_uniqueness_of :id
+	validates_confirmation_of :pass
+	validates_acceptance_of :attr
+	validates_length_of :pass, :minimum => 6
+	validates_format_of :email, :with => /regex/i
+	validates_inclusion_of :age, :in => 21..99
+	validates_exclusion_of :age, :in => 0..21, :message => "Sorry, must be over 21"
+	# Rails 3
+	validates :attr, :presence => true, :length => {:minimum => 3}, ...
+					 :presence => true
+					 :uniqueness => true
+					 :numericality => true
+					 :length => {:minimum => 0, :maximum => 100}
+					 :inclusion => {:in => [1,2,3]}
+					 :exclusion => {:in => [1..3]}	#?
+					 :acceptance => true
+					 :confirmation => true
+	belongs_to :zombie	# (singluar) adds "zombie_id" column in "tweets" database (of Tweet objects)
+end
+
+zombie_twitter/app/model/zombie.rb
+class Zombie < ActiveRecord::Base	# "zombies" database (of Zombie objects)
+	has_many :tweets	# (plural) 
+end
+
+z = Zombie.find(2)
+t = Tweet.create(:attr = "string", :zombie = z)
+	#<Tweet id:5, attr:"string", zombie_id: 2>
+t.zombie
+	#<Zombie id:2, name:"Bob", graveyard:"EastBurg Grass">
+z.tweets.count
+
+%>
+########## View ##########
+zombie_twitter
+	assets
+	app
+		model
+			zombie.rb
+			tweet.rb
+			weapon.rb
+		views
+			zombies
+			tweets
+				index.html.erb	# all tweets
+				show.html.erb	# one tweet
+			layouts
+				application.html.erb	# main site layout
+
+# .erb = "embedded ruby" (instide HTML)
+<% ... %>		evaluate as ruby
+<%= ... %>		evaluate & print ruby
+<%# ... %>		comment
+
+zombie_twitter/app/views/layouts/application.html.erb
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Twitter for Zombies</title>
+	<%= stylesheet_link_tag :all %>			# includes all stylesheets in zombie_twitter/assets/stylesheets (before Rails 3: zombie_twitter/public/stylesheets)
+	<%= javascript_include_tag :defaults %> # includes default js in zombie_twitter/assets/javascripts (before Rails 3: zombie_twitter/public/javascripts)
+	<%= csrf_meta_tag %>					# Cross-Site Request Forgery (automatically adds to forms to prevent hackers from submitting "comment spam") 
+</head>
+<body>
+	<img src="/images/twitter.png" />
+	<%= yield %>
+</body>
+</html>
+
+zombie_twitter/app/views/tweets/show.html.erb
+<% tweet = Tweet.find(1) %>
+<h1><%= tweet.status %></h1>
+<p>Posted by <%= tweet.zombie.name %></p>
+
+(1) http://zombie_twitter.com/<type-here> --> zombie_twitter/assets/<type-here>
+		i.e. - <img src="/images/twitter.png" />
+(2) attempt to run in rails
+
+<%=
+	link_to text, url
+	link_to tweet.zombie.name, zombie_path(tweet.zombie), :confirm => "Are you sure?"
+			"View All", tweets_path				/tweets
+			"View", tweet_path(tweet)			/tweets/1
+			"View", tweet						/tweets/1
+			"New", new_tweet_path				/tweets/new
+			"Edit", edit_tweet_path(tweet)		/tweets/1/edit
+			"Delete", tweet, :method => :delete	/tweets/1
+%>
+<a href="url">text</a>
+<a href="/zombies/1">Ash</a>	zombie_twitter/app/views/zombies/show.html.erb
+
+<% tweets = Tweet.all %>
+<% tweets.each do |tweet| %>
+	...
+<% end %>
+<% if tweets.empty? %>
+	No Tweets Found
+<% end %>
+
+
+########## Controller ##########
+zombie_twitter/app/controllers/tweets_controller.rb	# processes request: /tweets/1
+<%
+Note: /tweets/1 --> params = {:id="1"}
+class TweetsController < ApplicationController
+	
+	before_filter :preFilter
+	before_filter :auth, :only => [:edit, :update, :destroy]
+	
+	def preFiler
+		@tweet = Tweet.find(params[:id])
+	end
+	
+	def auth
+		# authorization
+		if session[:zombie_id] != @tweet.zombie.id
+			flash[:notice] = "Sorry, you can't edit this tweet"
+			redirect_to(tweets_path)	# 501 redirect
+			---------- same as -----------
+			redirect_to(tweets_path,
+				:notice => "Sorry, you can't edit this tweet"
+			)
+		end
+	end
+	
+	# single tweet
+	def show		# maps to: zombie_twitter/app/views/tweets/show.html.erb 
+		# @ = instance variable = can be accessed from inside views
+		@tweet = Tweet.find(params[:id])	# params also has GET & POST variables (i think)
+		
+		respond_to do |format|
+			format.html		# show.html.erb
+			format.xml {render :xml => @tweet}	 # /tweets/1.xml	# @tweet (id=1) in xml
+			format.json {render :json => @tweet} # /tweets/1.json	# @tweet (id=1) in json
+		end
+		
+		render :action => 'status'	# maps to: zombie_twitter/app/views/tweets/status.html.erb (instead of default: show.html.erb)
+	end
+	
+	# all tweets
+	def index		# maps to: zombie_twitter/app/views/tweets/index.html.erb 
+	end
+	
+	# form for new tweet
+	def new
+	end
+	
+	# form for editing tweet
+	def edit		# maps to: zombie_twitter/app/views/tweets/edit.html.erb
+		@tweet = Tweet.find(params[:id])
+		
+		if session[:zombie_id] != @tweet.zombie.id
+			flash[:notice] = "Sorry, you can't edit this tweet"
+			redirect_to(tweets_path)	# 501 redirect
+			---------- same as -----------
+			redirect_to(tweets_path,
+				:notice => "Sorry, you can't edit this tweet"
+			)
+		end
+	end
+	
+	# create new tweet
+	def create
+	end
+
+	# update a tweet
+	def update
+	end
+	
+	# delete a tweet
+	def destroy
+	end
+end
+%>
+
+# first, it calls TweetsController.show, then executes...
+zombie_twitter/app/views/tweets/show.html.erb
+	<% if flash[:notice] %>
+		<div class="notice"><% flash[:notice] %></div>
+	<% end %>
+	<h1><%= tweet.status %></h1>
+	<p>Posted by: <%= tweet.zombie.name %></p>
+
+session[:user_id] = "per user" hash
+flash[:notice] = used to send messages to the user (flash notification on screen)
+
+$ rails
+	mini-help
+$ rails new AppName
+	creates AppName folder with:
+		controllers
+		models
+		views
+	`run bundle install` (download external dependancies from internet)
+$ cd TwitterForZombies
+$ rails
+	different mini-help (because we're in the app)
+	common commands:
+		$ rails g 		generate new code
+		$ rails c 		run rails console
+		$ rails s 		run rails server 
+		$ rails db 		run database console (dbconsole) config/database.yml
+			add -h to any command for more info
+$ rails s
+	run server: localhost:3000 (default)
+$ rails g scaffold zombie name:string bio:text age:integer
+	creates:
+		model
+		routing
+		controller
+		views
+	database types:
+		string
+		text (think textarea)
+		integer
+		boolean
+		decimal
+		float
+		binary
+		date
+		time
+		datetime
+	migration = database migration
+		db/migrate/20130815######_create_zombies.rb
+		<%
+			class CreateZombies < ActiveRecord::Migration
+				def change 
+					create_table :zombies do |t|
+						# t.id automatically
+						t.string :name
+						t.text :bio
+						t.integer :age
+
+						t.timestamps	# "created at" & "updated at" automatically (and can be used) 
+					end
+				end
+			end
+		%>
+$ rake db:migrate
+	runs all missing migrations (i.e. - code above create "zombies" table in db)
+	localhost:3000/zombies
+$ rails console
+> Zombie.create(name:"Eric Allam", age:27)
+> z = Zombie.first
+> z.update_attributes(name: "Taylor Hess")
+	Ruby 1.8 --> 1.9
+		:name => "Tylor" --> name: "Tylor"
+		format.json {render :json => @zombies} --> format.json {render json: @zombies}
+$ rails g migration AddEmailAndRottingToZombies email:string rotting:boolean
+		   pattern: Add(doesnt matter)To(Table) columnName:type columnName:type ...
+			creates: db/migrate/YYYYMMDDTTTTTT_add_email_and_rotting_to_zombies.rb
+			<%
+				class AddEmailAndRottingToZombies < ActiveRecord::Migration
+					def change
+						add_column :zombies, :email, :string
+						add_column :zombies, :rotting, :boolean, default: false
+						# more options (~default: false)
+							default: value 	# depends on type
+							limit: integer
+							null: false		# required?
+							first: true		# first (left-most) column
+							after: :email 	# insert column to the right of :email column
+							unique: true	# like id
+					end
+				end
+			%>
+$ rake db:migrate
+	runs all missing migrations (i.e. - code above)
+$ rake db:rollback
+	rolls back to previous migration
+	really: undo most recent migration (at db level)
+$ rake db:schema:dump
+	dump the current state of the db
+	(automatically called with every $ rake db:migrate)
+	creates: db/schema.rb 	1 authoritative source for db schema (instead of a summation of migrations/changes/deltas)
+	<%
+		ActiveRecord::Schema.define(:version => YYYYMMDDTTTTTT) do
+			create_table "zombies", :force => true do |t|	# creates db if it doesn't exist yet
+				t.string	"name"
+				t.text 		"bio"
+				t.integer 	"age"
+				t.datetime 	"created_at"
+				t.datetime 	"updated_at"
+			end
+		end
+	%>
+$ rake db:setup
+	creates db, loads schema, and run the seed file
+	(when you join an existing rails development team)
+$ rails g migration RemoveAgeFromZombies age:integer
+		   pattern: Remove(?)From(Table) columnName:type
+		   creates: db/migrate/YYYYMMDDTTTTTT_remove_age_from_zombies.rb
+		   	<%
+		   		class RemoveAgeFromZombies < ActiveRecord::Migration
+		   			def up
+		   				remove_column :zombies, :age
+		   			end
+
+		   			def down 	# allows us to rollback
+		   				add_column :zombies, :age, :integer
+		   			end
+		   		end
+
+		   		only 2 Migration patterns (patterns = no need to manaually write migration)
+		   			Add(whatever)To(Table)
+		   			Remove(whatever)From(Table)
+		   			otherwise (need to manaually write migrations), remember
+		   				def up
+		   					...
+		   				end
+		   				def down
+		   					...
+		   				end
+
+
+		   		other Migration commands
+		   			rename_column :zombies, :bio, :description
+		   			rename_table :zombies, :ghouls
+		   			drop_table :zombies
+		   			change_column :zombies, :age, :integer, limit: 4
+		   			change_column_default :zombies, :is_admin, default: true
+		   	%>
+TwitterForZombies/Gemfile
+	contains all dependencies
+		gem 'sqlite3'	# default db
+$ bundle install
+	installs dependencies
+
+/config/database.yml
+	development:
+		adapter: sqlite3
+		database: db/development.sqlite3
+		pool: 5
+		timeout: 5000
+	test:
+		...
+	production:
+		...
+
+for MySQL
+	TwitterForZombies/Gemfile
+		gem 'mysql2'
+	/config/database.yml
+		development:
+			adapter: mysql2
+			encoding: utf8
+			database: tfzombies
+			pool: 5
+			username: un
+			password: pw
+			socket: /tmp/mysql.sock
+		test:
+			...
+		production:
+			...
+
+Level 2
+<% ########## scope ##########
+TwitterForZombies/app/rotting_zombies_controller.rb
+class RottingZombiesController < ApplicationController
+	def index
+		@rotting_zombies = Zombie.where(rotting: true)
+	end
+end
+---------- same as ----------
+TwitterForZombies/app/models/zombie.rb
+class Zombie < ActiveRecord::Base
+	scope :rotting, where(rotting: true)
+	# more scope...
+	scope :fresh, where("age < 20")
+	scope :recent, order("created_at desc").limit(3)
+end
+TwitterForZombies/app/rotting_zombies_controller.rb
+class RottingZombiesController < ApplicationController
+	def index
+		@rotting_zombies = Zombie.rotting
+		# more scope...
+						   Zombie.rotting.limit(10)
+						   Zombie.rotting.fresh.recent
+	end
+end
+%>
+
+<% ########## callbacks ##########
+---------- instead of ----------
+TwitterForZombies/app/controllers/zombies_controller.rb
+def update
+	@zombie = Zombie.find(params[:id])
+	if @zombie.age > 20
+		@zombie.rotting = true
+	end
+
+	respond_to do |format|
+		if @zombie.update_attributes(params[:zombie])
+			...
+		else
+			...
+		end
+	end
+end
+---------- this ----------
+TwitterForZombies/app/models/zombie.rb
+class Zombie ActiveRecord::Base
+%>
+
+
+
+
+
+

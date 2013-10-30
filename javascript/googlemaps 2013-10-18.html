@@ -1,0 +1,99 @@
+<div class="carousel-outer" style="position:relative;">
+    <div id="google-map" class="carousel-wrap" data-full-width="true" style="height:400px;"></div>
+    <div style="position:absolute; right:10px; bottom:40px;">
+        <a id="unlockButton" class="nectar-button small accent-color" href="javascript:unlockGoogleMaps();">unlock</a>
+    </div>
+</div>
+<div style="display:none;">
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBq2mmBZxkSGHg8WWtl1Y-9eZ0-Y-JBb0E&sensor=false"></script>
+    <script type="text/javascript">
+        var map;
+        var bounds_changed_event_listener_handle;
+        function initialize() {
+          var mapOptions = {
+            zoom: 4,
+            center: new google.maps.LatLng(39,-98),
+            //mapTypeId: google.maps.MapTypeId.ROADMAP,
+            disableDefaultUI: true,
+            disableDoubleClickZoom: true,
+            draggable: false,
+            keyboardShortcuts: false,
+            navigationControl: false,
+            scaleControl: false,
+            scrollwheel: false,
+            streetViewControl: false,
+            styles: [
+                {
+                    stylers: [
+                      { visibility: 'simplified' }
+                    ]
+                }
+                /*{
+                    featureType: '',
+                    elementType: '',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                },
+                {
+                    featureType: '',
+                    elementType: '',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                },
+                {
+                    featureType: '',
+                    elementType: '',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                }*/
+            ]
+          };
+          map = new google.maps.Map(document.getElementById('google-map'), mapOptions);
+          bounds_changed_event_listener_handle = google.maps.event.addListener(map, 'bounds_changed', function() {
+            map.setOptions({
+              center: new google.maps.LatLng(39,-98)
+            });
+          });
+          var cities = [
+            {city:'Boston, MA',   lat:42.3581, lng:-71.0636},
+            {city:'New York, NY', lat:40.6700, lng:-73.9400},
+            {city:'Miami, FL',    lat:25.7877, lng:-80.2241}
+          ];
+          var markers = [];
+          var infoWindow = new google.maps.InfoWindow();
+          for (var i = 0; i < cities.length; i++) {
+            var marker = new google.maps.Marker({
+                title: cities[i].city,
+                position: new google.maps.LatLng(cities[i].lat, cities[i].lng),
+                map: map,
+                icon: '/wp-content/plugins/espresso-calendar/css/images/att.png'
+            });
+            makeInfoWindowEvent(marker, infoWindow, cities[i].city, map);
+            markers.push(marker);
+          }
+        }
+        function makeInfoWindowEvent(marker, infoWindow, contentString, map) {
+          google.maps.event.addListener(marker, 'click', function() {
+            infoWindow.setContent(contentString);
+            infoWindow.open(map, marker);
+          });
+        }
+        function unlockGoogleMaps() {
+            map.setOptions({
+                disableDefaultUI: false,
+                disableDoubleClickZoom: false,
+                draggable: true,
+                keyboardShortcuts: true,
+                navigationControl: true,
+                scaleControl: true
+            });
+            google.maps.event.removeListener(bounds_changed_event_listener_handle);
+            document.getElementById('unlockButton').style.display = "none";
+            return false;
+        }
+        google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+</div>

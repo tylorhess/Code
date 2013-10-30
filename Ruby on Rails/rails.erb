@@ -1,0 +1,925 @@
+<%
+# rails development shops: ENTP, thoughtbot, pivotal labs, hashrocket, ...
+
+# application root (aka - "rails root"): ~/rails_projects/application_name/
+#	config/routes.rb		~/rails_projects/application_name/config/routes.rb
+
+# rvm_gem_bundle.sh
+# 	rvm = Ruby Version Manager
+# 	gems = self-contained solutions to specific problems: pagination, image upload, ...
+#	bundle = Bundler
+
+# MVC
+# model = database represented in ruby memory
+# view = what the user sees & interacts with
+# controller = container for group of web pages (static or dynamic)
+
+# browser --> url.com/users/ (HTTP request) -->
+#  ^	router (config/routes.rb) --> users#index (action) -->
+#  |	controller (app/controllers/users_controller.rb) --> UsersController.index (method) --> 
+#  |	  ^		model 
+#  |
+#  |	controller (app/controllers/users_controller.rb) --> @instance_variables
+#  |	view (app/views/layouts/application.html.erb) --> <%= yield % > -->
+#  |	view (app/views/users/index.html.erb)--.
+#   `------------------------------------------'
+1. browser --/users request--> router (config/routes.rb)
+2. router --index action--> controller (users_controller.rb)
+3. controller --User.all--> model (user.rb)
+4. model --users table--> database
+5. database --users table--> model
+6. model --User.all--> controller
+7. controller --@users--> view (index.html.erb)
+8. view --HTML--> controller
+9. controller --HTML--> browser
+
+########## start ##########
+$ cd ~/parent_directory/
+$ rails new sample_app --skip-test-unit		# --skip-tezt-unit tells rails not to generate test directory (we'll use RSpec instead)
+# 	first_app/app/			models, views, controllers, and helpers (core app code)
+# 			 /app/models/
+# 			 /app/views/
+# 			 /app/controllers/
+# 			 /app/assets/	css, js, img, ...
+# 			 /bin/			binary executable files
+# 			 /config/		application configuration files
+# 			 /db/			databse files
+# 			 /doc/			documentation files
+# 			 /lib/			library modules
+# 			 /lib/assets/	library assets (css, js, img, ...)
+# 			 /log/			application log files
+# 			 /public/		data accessable to the public (i.e. - error pages)
+# 			 /script/rails/	a script for generating code, opening console sessions, or starting a local server
+# 			 /test/			OBSOLETE (now: /spec/ directory)
+# 			 /tmp/			temp files
+# 			 /vendor/		third-party code (plugins, gems, ...)
+# 			 /vendor/assets/ css, js, img, ...
+# 			 README.rdoc 	a brief description of the app
+# 			 Rakefile		utility tasks available via `$ rake ...` command
+# 			 Gemfile		gem requirements for this app
+# 			 Gemfile.lock 	a list of gems used to ensure that all copies of the app use the same gem versions
+# 			 config.ru 		config file for Rack middleware
+# 			 .gitignore		patterns for all files that should be ignored by git
+# 	$ bundle install
+$ cd sample_app
+$ subl Gemfile
+		source 'https://rubygems.org'
+		ruby '2.0.0'
+		#ruby-gemset=railstutorial_rails_4_0
+		gem 'rails', '4.0.0'
+		gem 'bootstrap-sass', '2.3.2.0'
+		#gem 'less-rails-bootstrap', ???	# bootstrap with LESS (instead of SASS)
+		gem 'bcrypt-ruby', '3.0.1' 			# encryption (has_secure_password encryption, etc.)
+		gem 'faker', '1.1.2'
+		gem 'will_paginate', '3.0.4'
+		gem 'bootstrap-will_paginate', '0.0.9'
+		group :development, :test do
+		  gem 'sqlite3', '1.3.8'				# development & test database
+		  gem 'rspec-rails', '2.13.1'			# RSpec - unit testing
+		  # The following optional lines are part of the advanced setup.
+		  # gem 'guard-rspec', '2.5.0'
+		  # gem 'spork-rails', '4.0.0'
+		  # gem 'guard-spork', '1.5.0'
+		  # gem 'childprocess', '0.3.6'
+		end
+		group :test do
+		  gem 'selenium-webdriver', '2.35.1'	# Selenium - Capybara depends on Selenium
+		  gem 'capybara', '2.1.0'				# Capybara - programmatically simulate user interactions 
+		  gem 'factory_girl_rails', '4.2.0'
+		  gem 'cucumber-rails', '1.4.0', :require => false
+		  gem 'database_cleaner', github: 'bmabey/database_cleaner'
+		  # Uncomment this line on OS X.
+		  gem 'growl', '1.0.3'
+		  # Uncomment these lines on Linux.
+		  # gem 'libnotify', '0.8.0'
+		  # Uncomment these lines on Windows.
+		  # gem 'rb-notifu', '0.0.4'
+		  # gem 'win32console', '1.3.2'
+		  # gem 'wdm', '0.1.0'
+		end
+		gem 'sass-rails', '4.0.0'
+		gem 'uglifier', '2.1.1'
+		gem 'coffee-rails', '4.0.0'
+		gem 'jquery-rails', '3.0.4'
+		gem 'turbolinks', '1.1.1'
+		gem 'jbuilder', '1.0.2'
+		group :doc do
+		  gem 'sdoc', '0.3.20', require: false
+		end
+		group :production do
+		  gem 'pg', '0.15.1'			# PostgreSQL - production database (for Heroku)
+		  gem 'rails_12factor', '0.0.2'	# precompile static assets
+		end
+$ bundle install --without production
+$ bundle update
+$ bundle install #--without production is remembered, so we don't have to type it every time
+$ subl .gitignore
+		# default:
+		/.bundle 				# bundler config
+		/db/*.sqlite3 			# default SQLite database
+		/db/*.sqlite3-journal	# default SQLite database
+		/log/*.log 				# logfiles
+		/tmp 					# tempfiles
+		# recommended:
+		database.yml
+		doc/
+		*.swp
+		*~				# temp files?
+		.project
+		.DS_Store		# OS X only (folder info)
+		.idea
+		.secret 		# generated by: config/initializers/secret_token.rb
+# we want to hide the secret key: SampleApp::Application.config.secret_key_base = "askfhbsaifb..." (inside: config/initializers/secret_token.rb)
+# because github.com/tylorhess/ is public
+# so we generate & store the secret key here: .../sample_app/.secret
+# then .gitignore the .secret file: $ echo ".secret" >> .gitignore
+$ subl config/initializers/secret_token.rb
+		#$ echo ".secret" >> .gitignore
+		require 'securerandom'
+		def secure_token
+		  token_file = Rails.root.join('.secret')	# path .../sample_app/.secret
+		  if File.exist?(token_file)				# if .secret file exists
+		    # Use the existing token.
+		    File.read(token_file).chomp				# .chomp = remove \n, \r, and \r\n from beginning and end of string
+		  else
+		    # Generate a new token and store it in token_file.
+		    token = SecureRandom.hex(64)
+		    File.write(token_file, token)
+		    token
+		  end
+		end
+		SampleApp::Application.config.secret_key_base = secure_token
+		#SampleApp::Application.config.secret_key_base = "askfhbsaifb..."
+# configure rails to use RSpect instead of Test::Unit
+$ rails generate rspec:install
+$ git init
+$ git add .
+$ git commit -m "Initial commit"
+$ subl README.rdoc
+		# edit README
+$ git mv README.rdoc README.md
+$ git commit -am "improve the README"
+VISIT: github.com/new
+$ git remote add origin git@github.com:tylorhess/sample_app.git
+$ git push -u origin master
+$ subl . 	# open entire project (current directory) in Sublime Text
+
+# deploy to Heroku
+$ heroku login
+$ heroku create tylor-sample-app	# creates empty: tylor-sample-app.herokuapp.com
+$ rake assets:precompile 			# precompile assets for Heroku
+$ git add . 	# I think we need this to add: sample_app/public/assets/application-4ab8e... and sample_app/public/assets/application-f1a14...
+$ git commit -am "Add precompiled assets for Heroku"
+$ git push heroku master
+$ heroku run rake db:migrate
+
+# push & deploy regularly
+$ git push #origin master
+$ git push heroku #master
+$ heroku run rake db:migrate
+
+# actions in app/controller/users_controller.rb
+GET		/users			index		page to list all users
+GET		/users/1		show		page to show user with id 1
+GET		/users/new		new			page to make a new user
+POST	/users			create		create a new user
+GET		/users/1/edit	edit		page to edit user with id 1
+PATCH	/users/1		update		update user with id 1
+DELETE	/users/1		destroy		delete user with id 1
+
+########## HTTP > routes > controllers > views ##########
+#			 ^----------- HTML -----------'
+
+########## controllers ##########
+$ rails generate controller FooBars action1 action2
+$ rails destroy  controller FooBars action1 action2
+
+$ rails generate controller StaticPages home help --no-test-framework	# "--no-test-framework" suppresses the generation of default RSpec tests
+#$ rails generate controller <ControllerName> <routeMethodViewOne> <routeMethodViewTwo> ...
+# autogenerates:
+# 	config/routes.rb
+#		SampleApp::Application.routes.draw do
+#			get "static_pages/home"		# GET url.com/static_pages/home --> StaticPagesController.home
+#			get "static_pages/help"		# GET url.com/static_pages/help --> StaticPagesController.help
+#		end
+#	app/controllers/static_pages_controller.rb
+# 		class StaticPagesController < ApplicationController
+# 			def home
+# 			end		#--> home.html.erb
+# 			def help
+# 			end		#--> help.html.erb
+# 		end
+# 	app/views/static_pages/home.html.erb
+# 		<h1>StaticPages#home</h1>
+# 		<p>Find me in app/views/static_pages/home.html.erb</p>
+# 	app/views/static_pages/help.html.erb
+# 		<h1>StaticPages#help</h1>
+# 		<p>Find me in app/views/static_pages/help.html.erb</p>
+
+########## routes ##########
+# .../sample_app/config/routes.rb
+$ subl config/routes.rb
+		SampleApp::Application.routes.draw do
+			root  'static_pages#home'   								# GET url.com/        --> StaticPagesController.home
+			#match '/', to: 'static_pages#home', via: 'get'				# GET url.com/        --> StaticPagesController.home
+			match '/help',    to: 'static_pages#help',    via: 'get'	# GET url.com/help    --> StaticPagesController.help
+			match '/about',   to: 'static_pages#about',   via: 'get'	# GET url.com/about   --> StaticPagesController.about
+			match '/contact', to: 'static_pages#contact', via: 'get'	# GET url.com/contact --> StaticPagesController.contact
+			#get "static_pages/home"						  # GET url.com/static_pages/home --> StaticPagesController.home
+			#get "static_pages/help"						  # GET url.com/static_pages/help --> StaticPagesController.help
+			...
+		end
+# creates variables for each `match`:
+#	help_path = '/about'
+#	help_url  = 'http://url.com/about'
+%>
+
+########## views ##########
+# .../sample_app/app/views/...
+# embedded ruby (.erb) files
+# link
+<%= link_to "Help", help_path %>	# `help_path` variable created in .../sample_app/config/routes.rb
+<%= link_to "text", 'link', optional: "hash", id:"myId" %>	# <%= link_to "text", 'link', {optional: "hash", id:"myId"} %>
+	<a href="link" id="myId">text</a>
+<%= link_to image_tag("rails.png", alt: "Rails"), 'http://rubyonrails.org/' %> # image_tag = automatically finds any image in .../sample_app/app/assets
+	<a href="link"><img alt="Rails" src="/assets/rails.png" /></a>		# alt = what to display if there is no image
+# partials
+<%= render 'layouts/shim' %>	# .../sample_app/app/views/layouts/_shim.html.erb (notice "_")
+<%= render 'layouts/header' %>	# .../sample_app/app/views/layouts/_header.html.erb
+
+<%
+########## models ##########
+# model = "Active Record"
+$ rails generate model Foo bar:string baz:integer
+$ rails destroy  model Foo
+
+$ rails generate model User name:string email:string
+# autogenerates:
+# 	db/migrate/[timestamp]_create_users.rb 		# a "migration"
+# 		class CreateUsers < ActiveRecord::Migration
+# 		  def change
+# 		    create_table :users do |t|	# create_table = rails method to create database table
+# 		      t.string :name
+# 		      t.string :email
+# 		      t.timestamps
+# 		    end
+# 		  end
+# 		end
+# 	app/models/user.rb
+# 		class User < ActiveRecord::Base
+# 		end
+# 	spec/models/user_spec.rb 		# generates rspec file unless: "--no-test-framework"
+# 		require 'spec_helper'
+# 		describe User do
+# 		  pending "add some examples to (or delete) #{__FILE__}" 	# `$ rspec spec/` --> "1 example, 0 failures, 1 pending" = under construction
+# 		end
+$ bundle exec rake db:migrate 	# runs migration (i.e. - creates table, updates database, ...)
+# autogenerates:
+#	 db/development.sqlite3
+
+# capital/lowercase singular/plural
+User 		$ rails generate model User
+User 		class User (app/models/user.rb)
+user.rb 	app/models/user.rb
+users 		database table name
+
+# users table
+id 			:integer 		# always included (by default)
+created_at 	:datetime		# always included (by default)
+updated_at	:datetime		# always included (by default)
+name 		:string
+email 		:string
+
+########## model validation & relationships ##########
+# relationships: belongs_to,  has_many
+
+#$ subl app/models/model.rb
+#class Model < ActiveRecord::Base
+$ subl app/models/user.rb
+class User < ActiveRecord::Base
+
+  # .save/.create/.update callbacks (in order of calling)
+  # also: .update_attribute .increment! .decrement! .toggle!
+  before_validation :method_name 	# method defined below
+  after_validation  :method_name, if: :question_method?, unless: :not_question_method? # conditionals
+  before_save { email.downcase! } 	# self.email = email.downcase 
+  before_create / before_update :method_name
+  around_create / around_update :method_name
+  after_create  / after_update  :method_name
+  after_save :method_name
+  
+  # .destroy callbacks (in order)
+  # also: .destroy_all
+  before_destroy :method_name
+  around_destroy :method_name
+  after_destroy  :method_name
+  
+  # .find callbacks (in order)
+  # also: .find_by .find_by_* .find_by_sql .all .first .last
+  after_find
+  after_initialize
+
+  ...
+
+  private # at the very end of class User (bacause "private" has no "end") 
+  	def method_name
+  		...
+  	end
+
+  # Validation: http://edgeguides.rubyonrails.org/active_record_validations.html
+  validates :attr, ... , ... , ...
+  #validates :name, presence: true, length: { maximum: 50 }
+  #VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i
+  #validates :email, presence: true, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive:false }
+
+  # common options
+  validates :attr, ______: {
+  	allow_nil: true,
+  	allow_blank: true,
+  	message: "msg",
+  	on: :create,	# only validate on creation  (default: create and update)
+  	on: :update 	# only validate when updated (default: create and update)
+  }
+
+  # presence/absence
+  validates :attr, presence: true 	# user.attr = non-blank (not empty & not just whitespace)
+  validates :attr, absence:  true 	# makes sure :attr is empty or whitespace
+
+  validates :password, length: { is: 8 }		# length == 8
+  validates :password, length: { in: [1,2,3] }	# length == 1 or 2 or 3
+  validates :password, length: { in: [1..3] }	# length == 1 or 2 or 3
+  validates :password, length: { 
+  	minimum: 2, 
+  	maximum: 50,
+  	tokenizer: lambda { |str| str.scan(/\w+/) },	# ???
+    too_short: "must have at least %{count} words",
+    too_long: "must have at most %{count} words"
+   }
+  
+  validates :password, format: { 
+  	with: /regex/, 	# validate with regular expression
+  	message: "only letters allowed"
+  }
+  
+  validates :attr, uniqueness: true 		# ALSO: add database migration for uniqueness: def change; add_index :users, :email, unique: true; end;
+  validates :attr, uniqueness: { 
+  	case_sensitive: false
+  }
+  
+  validates :attr, numericality: true 		# numeric values only
+  validates :attr, numericality: {
+  	greater_than: 
+  	less_than:
+  	equal_to:
+  	greater_than_or_equal_to:
+  	less_than_or_equal_to:
+  	odd: true 	# just ":odd"  maybe?
+  	even: true 	# just ":even" maybe? 
+  }
+  
+  validates :attr, inclusion: {
+  	in: [1,2,3], 	# validates that :attr == 1 or 2 or 3 (or any other array)
+  	message: "%{value} not valid. Please enter a valid option."
+  }
+  validates :attr, exclusion: {
+  	in: [1..3], 	# validates that :attr != 1 or 2 or 3 (or any other array)
+  	message: "%{value} already exists"
+  }
+  
+  validates :terms_of_service, acceptance: true 	# validates that a form checkbox was checked
+  validates :attr, acceptance: {
+  	accept: 'value'		# validates that :attr == 'value' (i.e. - 'yes') default: '1'
+  }
+  
+  # confirmation
+  <form>
+	  <%= text_field :user, :password %>
+	  <%= text_field :user, :password_confirmation %>
+  </form>
+  validates :password, confirmation: true
+  validates :password_confirmation, presence: true
+
+end
+
+# validates_with (method)
+class Person < ActiveRecord::Base
+  validates_with GoodnessValidator
+end
+class GoodnessValidator < ActiveModel::Validator
+  def validate(record)
+    if record.first_name == "Evil"
+      record.errors[:base] << "This person is evil"
+    end
+  end
+end
+# validates_with (method + fields)
+class Person < ActiveRecord::Base
+  validates_with GoodnessValidator, fields: [:first_name, :last_name]
+end
+class GoodnessValidator < ActiveModel::Validator
+  def validate(record)
+    if options[:fields].any?{|field| record.send(field) == "Evil" }
+      record.errors[:base] << "This person is evil"
+    end
+  end
+end
+# validates_with (method + )
+class Person < ActiveRecord::Base
+  validate do |person|
+    GoodnessValidator.new(person).validate
+  end
+end
+class GoodnessValidator
+  def initialize(person)
+    @person = person
+  end
+  def validate
+    if some_complex_condition_involving_ivars_and_private_methods?
+      @person.errors[:base] << "This person is evil"
+    end
+  end
+end
+
+# association validation
+# Library model "has many" Book objects (one-to-many or many-to-many)
+has_many :books	# (plural) 
+validates_associated :books 	# ensures that all Book objects associated with this Library object are valid
+
+# associations
+has_one :order 					# (singular)
+has_many :orders 				# (plural)
+has_many :orders, dependent: :destroy	# user.destroy = deletes user's orders (using order.destroy)
+belongs_to :user 				# (singular)
+has_and_belongs_to_many :users 	# (plural)
+has_many :physicians, :through :appointments 	# (plural)
+has_one :physician, :through :appointment 		# (singular)
+
+# one-to-many, many-to-one
+# 1 user to multiple orders
+# 	User "has many" orders (plural)
+# 	Order "belongs to" user (singular)
+# migration
+$ rails g migration AddUserRefToOrders user:references
+# autogenerates:
+# 	class AddUserRefToOrders < ActiveRecord::Migration
+# 	  def change
+# 	    add_reference :orders, :user, index: true
+# 	  end
+# 	end
+# models
+class User < ActiveRecord::Base
+	...
+	has_many :orders 	# (plural)
+	#has_one :order 	# (singular)
+end
+class Order < ActiveRecord::Base
+ 	...
+ 	belongs_to :user 	# (singular) adds "user_id" column to "orders" table
+end
+@order = @customer.orders.create(...)	# instead of: @order = Order.create( ..., customer_id: @customer.id )
+
+# one-to-many, many-to-one
+# self reference
+class Employee < ActiveRecord::Base
+	has_many :subordinates, class_name: "Employee", foreign_key: "manager_id"
+	belongs_to :manager, class_name: "Employee"
+end
+
+# many-to-many
+# 1 part to multiple assemblies AND multiple parts to 1 assembly
+# migration
+$ rails g migration CreateJoinTableAssemblyPart assembly part
+# autogenerates:
+# 	class CreateJoinTableAssemblyPart < ActiveRecord::Migration
+# 	  def change
+# 	    create_join_table :assemblies, :parts do |t|  
+# 	      # t.index [:assembly_id, :part_id]
+# 	      # t.index [:part_id, :assembly_id]
+# 	    end
+# 	  end
+# 	end
+# models
+class Assembly < ActiveRecord::Base
+	...
+	has_and_belongs_to_many :parts
+end
+class Part < ActiveRecord::Base
+	...
+	has_and_belongs_to_many :assemblies
+end
+
+# many-to-many :through (:through = use a regular table as a join table)
+# migration
+$ rails g migration AddPhysicianRefToAppointment physician:references
+$ rails g migration AddPatientRefToAppointment patient:references
+# models
+class Physician < ActiveRecord::Base
+	has_many :appointments
+	has_many :patients, through: :appointments
+end
+class Appointment < ActiveRecord::Base
+	belongs_to :physician
+	belongs_to :patient
+end
+class Patient < ActiveRecord::Base
+	has_many :appointments
+	has_many :physicians, through: :appointments
+end
+@patient_name = @physician.patients.first.name 	# instead of: @physician.appointments.first.patients.first.name
+
+# polymorphic
+# 	employees have pictures
+# 	products have pictures
+# migration
+$ rails generate migration AddImageableRefToProducts imageable:references{polymorphic}
+# autogenerates:
+# 	class AddImageableRefToProducts < ActiveRecord::Migration
+# 	  def change
+# 	    add_reference :products, :imageable, polymorphic: true, index: true
+# 	  end
+# 	end
+# models
+class Picture < ActiveRecord::Base
+	belongs_to :imageable, polymorphic: true
+end
+class Employee < ActiveRecord::Base
+	has_many :pictures, as: :imageable
+end
+class Product < ActiveRecord::Base
+	has_many :pictures, as: :imageable
+end
+
+# password
+$ rails g migration AddPasswordDigestToUsers password_digest:string
+class User < ActiveRecord::Base
+  ...
+  has_secure_password
+  	# adds :password && :password_confirmation attributes to model (in memory), but NOT database
+  	# validates presence of :password && :password_confirmation
+  	# validates that :password == :password_confirmation
+  	# adds .authenticate method to model
+end
+user = User.find_by(email: email)
+current_user = user.authenticate(password) # returns user || false
+
+########## database migration ##########
+
+# database types:
+attr:string
+attr:text 	# think textarea
+attr:integer
+attr:boolean
+attr:decimal
+attr:float
+attr:binary
+attr:date
+attr:time
+attr:datetime
+
+# migrations
+#$ bundle exec ...
+$ ... rake db:migrate
+$ ... rake db:migrate VERSION=0 	# rollback to 0 = empty database (1 = first migration, 2 = second migration, ...)
+$ ... rake db:rollback #STEP=1 		# default: STEP=1
+$ ... rake db:rollback STEP=3 		# (db:rollback) x 3
+
+# migrations are NOT the authoritative source for your database schema
+# db/schema.rb    is the authoritative source for your database schema
+#	config/application.rb sets config.active_record.schema_format = :sql OR :ruby
+
+# preare test database
+#$ bundle exec ...
+$ ... rake db:migrate RAILS_ENV=test 	# migrate "test" environment (so rspec works)
+---------- (effectively) same as ----------
+$ ... rake test:prepare					# test.sqlite3 = development.sqlite3 (in: .../sample_app/db/)
+---------- (effectively) same as ----------
+$ ... rake db:test:load 				# (first time) (re)creates test database from db/schema.rb
+
+# MODEL: `$ rails g model ...`   NOT: `$ rails g migration ...`
+$ rails generate model User name:string email:string
+# autogenerates:
+# 	db/migrate/YYYYMMDDTTTTTT_create_users.rb 		# a "migration"
+# 		class CreateUsers < ActiveRecord::Migration
+# 		  def change
+# 		    create_table :users do |t|
+# 		      t.string :name
+# 		      t.string :email
+# 		      t.timestamps
+# 		    end
+# 		  end
+# 		end
+# 	app/models/user.rb
+# 	spec/models/user_spec.rb
+
+# AUTO-MIGRATION: create table
+$ rails generate migration Create<Table>s  columnName:type columnName:type ...
+---------- same as ---------
+$ rails g        migration create_<table>s columnName:type columnName:type ...
+# example
+$ rails g migration CreateUsers name:string email:string
+# autogenerates: 
+# 	db/migrate/YYYYMMDDTTTTTT_create_users.rb
+# 		class CreateUsers < ActiveRecord::Migration
+# 		  def change
+# 		    create_table :users do |t|
+# 		      t.string :name
+# 		      t.string :email
+# 		    end
+# 		  end
+# 		end
+
+# AUTO-MIGRATION: add column to table
+$ rails g migration Add<DoesntMatter>To<Table>s columnName:type columnName:type ...
+# example:
+$ rails g migration AddBlahToUsers first:string:index valid:boolean age:number
+# autogenerates: 
+# 	db/migrate/YYYYMMDDTTTTTT_add_blah_to_users.rb
+# 		class AddBlahToUsers < ActiveRecord::Migration
+# 			def change
+# 				add_column :users, :first, :string
+# 				add_index :users, :first 				# index = search/sort (like indexing hard drive): http://stackoverflow.com/questions/3658859/when-to-add-what-indexes-in-a-table-in-rails/3661096#3661096
+# 				add_column :users, :valid, :boolean		# 		  has_many & belongs_to automatically index
+# 				add_column :users, :age,   :number
+# 			end
+# 		end
+
+# AUTO-MIGRATION: remove column from table
+$ rails g migration Remove<DoesntMatter>From<Table>s columnName:type columnName:type ...
+# example:
+$ rails g migration RemoveValidFromUsers valid:boolean
+# autogenerates: 
+# 	db/migrate/YYYYMMDDTTTTTT_remove_valid_from_users.rb
+# 		class RemoveValidFromUsers < ActiveRecord::Migration
+# 			def change
+# 				remove_column :users, :valid, :boolean
+# 			end
+# 		end
+
+
+# AUTO-MIGRATION: add "table1_id" column (reference) to Table2 (belongs_to automatically does this)
+$ rails generate migration Add<Table1>RefTo<Table2>s <table1>:references
+# example (adds "user_id" column to "posts" table)
+$ rails generate migration AddUserRefToPosts user:references
+# autogenerates:
+# 	class AddUserRefToPosts < ActiveRecord::Migration
+# 	  def change
+# 	    add_reference :posts, :user, index: true
+# 	  end
+# 	end
+
+# AUTO-MIGRATION: create Table1-Table2 join table
+$ rails g migration CreateJoinTable<Table1><Table2> <table1> <table2>
+# example:
+$ rails g migration CreateJoinTableUserProduct user product
+# autogenerates:
+# 	class CreateJoinTableUserProduct < ActiveRecord::Migration
+# 	  def change
+# 	    create_join_table :users, :products do |t|
+# 	      # t.index [:user_id, :product_id]
+# 	      # t.index [:product_id, :user_id]
+# 	    end
+# 	  end
+# 	end
+
+# modifiers
+# 	limit 		= Sets the maximum size of the string/text/binary/integer fields
+# 	precision 	= Defines the precision for the decimal fields
+# 	scale 		= Defines the scale for the decimal fields
+# 	polymorphic = Adds a type column for belongs_to associations
+# example:
+$ rails generate migration AddDetailsToProducts price:decimal{5,2} user:references{polymorphic}
+# autogenerates:
+# 	class AddDetailsToProducts < ActiveRecord::Migration
+# 	  def change
+# 	    add_column :products, :price, precision: 5, scale: 2
+# 	    add_reference :products, :user, polymorphic: true, index: true
+# 	  end
+# 	end
+
+# CUSTOM-MIGRATION:
+class ... < ActiveRecord::Migration
+	def ...
+		add_column :products, :price, #precision: 5, scale: 2 			# add "price" column to "products" table
+		add_index :users, :name, #unique: true 							# index "name" column in "users" table
+		add_reference :posts, :user, #polymorphic: true, index: true 	# adds "user_id" column to "posts" table
+		add_timestamps # ???											# add "created_at" & "updated_at" columns
+		create_table :products do |t| 									# create "products" table
+		  t.remove :description
+		  t.string :name
+		  t.index :name
+		  t.rename :upccode, :upc_code
+		  t.belongs_to :user
+		end
+		create_join_table :products, :categories 						# create products-categories join table
+		drop_table 			# "must supply a block"
+		drop_join_table 	# "must supply a block"
+		remove_timestamps
+		rename_column
+		rename_index
+		remove_reference
+		rename_table
+
+		# using SQL
+		Products.connection.execute('UPDATE `products` SET `price`=`free` WHERE 1')		
+	end
+end
+
+
+# indexing = sorts by this column, so searching is faster (like OS X indexing hard drive for Spotlight feature)
+# searching a non-indexed column is slow (called: "full-table scan")
+# searching = references (database relationships) and .find functions (.find_by, .find_by_attr, ...)
+$ rails g migration ... <table>:references
+	add_column ... index: true
+$ rails g migration ... <column>:<type>:index
+	add_reference ... index: true
+
+
+add_column :users, :last,  :string, default: false
+# more options (~default: false)
+	default: value 	# depends on type
+	limit: integer
+	null: false		# required?
+	first: true		# first (left-most) column
+	after: :email 	# insert column to the right of :email column
+	unique: true	# like id
+
+########## integration tests ##########
+# Test-Driven Development (TDD) --> Behavior-Driven Development (BDD)
+# fail-implement-pass = write test first, then implement code (increase confidence that test tests code)
+
+# initial configuration
+$ subl spec/spec_helper.rb
+		RSpec.configure do |config|
+		  ...
+		  config.include Capybara::DSL
+		end
+
+SEE: capybara_rspec.rb
+	$ rails generate integration_test static_pages
+	$ subl spec/requests/static_pages_spec.rb
+
+########## assets ##########
+# asset pipeline = concatenate, compile (.scss, .coffee, .erb), minify, compress JavaScript & CSS assets
+# concatenates all .js & .css files into one master file
+# compiles foobar.js.erb.coffee (right-to-left)
+# minifies/compresses .css (removes whitespace & comments) & .js (more complex)
+# also inserts an MD5 fingerprint (file modified --> file's name's changed --> isn't cached & browser reloads it)
+.../sample_app/app/assets/stylesheets/
+.../sample_app/app/assets/javascripts/
+.../sample_app/app/assets/images/
+# asset pipeline = Sprockets gem (included by default >= rails 3.1)
+$ echo "gem 'sprockets'" >> Gemfile		# not necessary, included by default
+# enable/disable asset pipeline (enabled by default):
+$ subl config/application.rb
+		module SampleApp
+			class Application < Rails::Application
+				# asset pipeline enabled by default
+				config.assets.enabled = true 	# not necessary (default)
+				config.assets.enabled = false 	# to disable
+			end
+		end
+# asset pipeline autogenerates:
+# 	$ subl app/assets/stylesheets/application.css
+# 		/* ...
+# 		 *= require_self			# include .../sample_app/app/assets/stylesheets/application.css itself (if there is any css to include)
+# 		 *= require_tree .			# include all .css files in .../sample_app/app/assets/stylesheets/ directory & subdirectories
+#		 */							# `*= require_tree .` includes files in no particular order
+#									# use `*= require ...` if you need files included in a particular order
+# 	$ subl app/assets/javascripts/application.js
+# 		// ...
+# 		//= require jquery
+# 		//= require jquery_ujs
+# 		//= require_tree .			# include all .js files in .../sample_app/app/assets/javascripts/ directory & subdirectories
+#									# `//= require_tree .` includes files in no particular order
+#									# use `//= require ...` if you need files included in a particular order
+# add a line to make bootstrap-sass compatible with the asset pipeline
+$ subl config/application.rb
+		module SampleApp
+		  class Application < Rails::Application
+		  	...
+		    config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif)
+		  end
+		end
+
+# install Bootstrap
+# all stylesheets in .../sample_app/app/assets/stylesheets/ automatically included in url.com/assets/application.css
+$ subl app/assets/stylesheets/custom.css.scss 	# ".css.scss" --sass-precompiler--> ".css"
+		@import "bootstrap";	# includes entire Boostrap CSS framework
+%>
+
+# accessing assets
+<%= stylesheet_link_tag "application" %>		# once, at top, in header
+<%= javascript_include_tag "application" %>		# once, at top, in header
+<%= image_tag "rails.png" %>					# accessing images (checks client-side url.com/assets/images/ directory)
+
+# .erb (.js.coffee.erb & .css.scss.erb)
+$('#logo').attr({ src: "<%= asset_path('logo.png') %>" });
+.class { background-image: url(<%= asset_path 'image.png' %>) }  	# data URI: .class { background-image: url(<%= asset_data_uri 'image.png' %>) }
+
+# .css
+asset-path("rails.png", image)	# compiles to: "/assets/rails.png"
+asset-url("rails.png", image) 	# compiles to: url(/assets/rails.png)
+#---------- same as ----------#
+image-path("rails.png")	# compiles to: "/assets/rails.png"
+image-url("rails.png") 	# compiles to: url(/assets/rails.png)
+
+<%
+########## console ##########
+$ rails console
+---------- same as ----------
+$ rails c
+$ rails c --sandbox 	# --sandbox = rolls back database at end of session
+	> exit
+	> quit
+	> ^D 	# ctrl + d = force quit
+		(0.2ms)  rollback transaction # if sandboxed
+
+
+# CRUD = create, read, update, delete
+########## create ##########
+user = User.new			# assumes "users" database (lowercase, plural)
+user.attr1 = "value1"
+user.attr2 = "value2"
+user.save 				# autogenerates: "id" "created_at" and "updated_at"
+# returns false, if fails to validate: .../sample_app/app/models/user.rb (or database?)
+---------- same as ----------
+user = User.new(attr1: "value1", attr2: "value2")
+user.save				# autogenerates: "id" "created_at" and "updated_at"
+# returns false, if fails to validate: .../sample_app/app/models/user.rb (or database?)
+---------- same as ----------
+User.create(attr1: "value1", attr2: "value2")	# autogenerates: "id" "created_at" and "updated_at"
+# returns false, if fails to validate: .../sample_app/app/models/user.rb (or database?)
+
+########## read ##########
+User.find(id)	# returns user or throws exception
+User.find(id1, id2, id3, ...)	# returns array
+User.find_by( email: "another@example.com" )
+User.find_by_email( "mhartl@example.com" )
+User.first
+User.last
+User.all
+User.count
+User.order(:attr1)
+User.limit(10)
+User.where(attr1: 'value1')
+User.where(attr1: 'value1').order(:attr1).limit(10) # first (.order) 10 (.limit) where attr1 = value1 
+
+
+########## update ##########
+user = User.find(3)
+user.attr1 = "value1"
+user.attr2 = "value2"
+user.save			# returns false, if fails to validate: .../sample_app/app/models/user.rb (or database?)
+---------- same as ----------
+user = User.find(3)
+user.attribute = {attr1: "value1"}
+user.attributes = {		# curly brace == .save
+	attr1: "value1",
+	attr2: "value2"
+}
+user.save
+---------- same as ----------
+user = User.find(3)
+user.update_attribute(attr1: "value1")
+user.update_attributes( # parenthesis != .save
+	attr1: "value1",
+	attr2: "value2"
+)
+
+########## delete ##########
+user.destroy
+User.destroy_all
+
+########## reload ##########
+user.reload 		# reloads user from database (discards unsaved changes)
+user.reload.attr1	# reloads user.attr1 from database (discards unsaved changes)
+
+########## errors ##########
+# checks validation
+user.valid?
+user.save 		
+user.update 	# implies .save
+User.create 	# implies .save
+	user.errors.messages 		#=> {name:["can't be blank"]} 	(hash)
+	user.errors.full_messages	#=> ["Name can't be blank"] 	(array)
+
+# does NOT check validation
+User.new 		#=> #<User id: nil, name: nil>
+	user.errors.messages #=> {}
+
+
+
+
+
+
+
+# Guard gem - only run new/modified tests (doesn't run all tests every time)
+http://ruby.railstutorial.org/chapters/static-pages#sec-guard
+
+# Spork gem (test server) - speed up slow startup time for rspec test suite
+http://ruby.railstutorial.org/chapters/static-pages#sec-spork
+
+# Sublime Text 2 Ruby Tests
+http://ruby.railstutorial.org/chapters/static-pages#sec-tests_inside_sublime_text
+$ cd ~/Library/Application\ Support/Sublime\ Text\ 2/Packages
+$ git clone https://github.com/maltize/sublime-text-2-ruby-tests.git RubyTest

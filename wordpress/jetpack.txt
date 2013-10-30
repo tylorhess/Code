@@ -1,0 +1,20 @@
+jetpack
+	Notifications = admin notifications
+	Publicize = social media = Facebook, Twitter, Tumblr, Yahoo!, Linkedin
+	WordPress.com Stats = site stats
+	Jetpack Comments = use WordPress.com, Twitter, or Facebook to comment
+	Subscriptions = (sidebar widget) any time we publish a post, email sent to all subscribers
+	Carousel = WordPress image galleries carousel
+	Likes = # of likes and gravatar images of likers
+	Post by Email = publish posts by sending an email
+	Sharing = share posts using: Twitter, Facebook, Reddit, StumbleUpon, Digg, LinkedIn, Google+, Print, Email
+	Spelling and Grammar = spell- and grammar-check
+	Omnisearch = spotlight-like search (posts, pages, comments, plugins, ...)
+	Gravatar Hovercards = tooltip on hover: name, bio, pictures, links to other social media, ...
+	Widget Visibility = enable/disable widgets on specific pages 
+	Tiled Galleries = mosaic photo layout
+	Shortcode Embeds = use shortcodes to embed: youtube, vimeo, slideshare, flickr
+	...
+	($$$) VaultPress = backup and security scanning
+	($$$) ...
+

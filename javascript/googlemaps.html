@@ -1,0 +1,120 @@
+<div id="google-map" class="carousel-wrap" data-full-width="true" style="height:400px;"></div>
+<div style="display:none;">
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBq2mmBZxkSGHg8WWtl1Y-9eZ0-Y-JBb0E&sensor=false"></script>
+    <script type="text/javascript">
+        var map;
+        var bounds_changed_event_listener_handle;
+        function initialize() {
+          var mapOptions = {
+            zoom: 4,
+            center: new google.maps.LatLng(39,-98),
+            scrollwheel: false,
+            streetViewControl: false,
+            styles: [
+                /*{
+                    featureType: '',    // all, administrative (...), landscape (...), poi (...), road (...), transit (...), water
+                    elementType: '',    // all, geometry (.fill  .stroke), labels (.icon  .text  .text.fill  .text.stroke)
+                    stylers: [
+                      { visibility: 'simplified' }
+                                OR
+                      { color: "#99FF33" }
+                                OR
+                      { hue: "#00d4ff" },
+                      { saturation: 60 },
+                      { lightness: -20 },
+                      { gamma: 1.51 }
+                    ]
+                }*/
+                {
+                    featureType: 'water',
+                    elementType: 'geometry',
+                    stylers: [
+                      { color: '#999999' }
+                    ]
+                },
+                {
+                    featureType: 'water',
+                    elementType: 'labels',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                },
+                {
+                    featureType: 'transit',
+                    elementType: 'all',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                },
+                {
+                    featureType: 'road',
+                    elementType: 'all',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                },
+                {
+                    featureType: 'poi',
+                    elementType: 'all',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                },
+                {
+                    featureType: 'landscape',
+                    elementType: 'geometry',
+                    stylers: [
+                      { color: '#333333' }
+                    ]
+                },
+                {
+                    featureType: 'landscape',
+                    elementType: 'labels',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                },
+                {
+                    featureType: 'administrative',
+                    elementType: 'geometry',
+                    stylers: [
+                      { color: '#CCCCCC' }
+                    ]
+                },
+                {
+                    featureType: 'administrative',
+                    elementType: 'labels',
+                    stylers: [
+                      { visibility: 'off' }
+                    ]
+                }
+            ]
+          };
+          map = new google.maps.Map(document.getElementById('google-map'), mapOptions);
+          var cities = [
+            {city:'Boston, MA',   lat:42.3581, lng:-71.0636},
+            {city:'New York, NY', lat:40.6700, lng:-73.9400},
+            {city:'Miami, FL',    lat:25.7877, lng:-80.2241}
+          ];
+          var markers = [];
+          var infoWindow = new google.maps.InfoWindow();
+          for (var i = 0; i < cities.length; i++) {
+            var marker = new google.maps.Marker({
+                title: cities[i].city,
+                position: new google.maps.LatLng(cities[i].lat, cities[i].lng),
+                map: map,
+                icon: '/wp-content/plugins/espresso-calendar/css/images/att.png'
+            });
+            makeInfoWindowEvent(marker, infoWindow, cities[i].city, map);
+            markers.push(marker);
+          }
+        }
+        function makeInfoWindowEvent(marker, infoWindow, contentString, map) {
+          google.maps.event.addListener(marker, 'click', function() {
+            infoWindow.setContent(contentString);
+            infoWindow.open(map, marker);
+          });
+        }
+        google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+</div>

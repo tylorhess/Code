@@ -1,0 +1,77 @@
+// Sass adds nesting, variables, mixins, selector inheritance, ...
+// Sass has 2 flavors:
+// 		.scss ("Sassy CSS") 
+//			is a superset of CSS3 = CSS3 + Sass (looks like CSS3, plus some other stuff)
+// 		.sass
+//			looks like .haml (uses indentation instead of brackets & semicolons)
+
+// this comment DOES NOT appear in css
+/* this comment appears in css */
+
+//---------- .scss ----------//
+
+// $var = variables
+$blue: #00F;
+$margin: 16px;
+
+div.class {
+	padding: $margin / 2;	// you can do in-line math
+	color: $blue;
+}
+
+// @include = mixins (allow you to reuse whole chunks of CSS)
+@mixin table-base {
+  th {
+    text-align: center;
+    font-weight: bold;
+  }
+  td, th {padding: 2px}
+}
+@mixin left($dist) {
+  float: left;
+  margin-left: $dist;
+}
+div#id {
+  @include left(10px);	// you can even pass parameters
+  @include table-base;
+}
+
+// @extend = selector inheritance
+.error {
+  border: 1px #f00;
+  background: #fdd;
+}
+.error.intrusion {
+  font-size: 1.3em;
+  font-weight: bold;
+}
+.badError {
+  @extend .error;
+  border-width: 3px;
+}
+
+// nesting
+li {
+  font: {
+    family: serif;
+    weight: bold;
+    size: 1.2em;
+  }
+} // becomes:
+		li {
+		  font-family: serif;
+		  font-weight: bold;
+		  font-size: 1.2em;
+		}
+table.hl {
+  margin: 2em 0;
+ 	 td.ln {
+    text-align: right;
+  }
+} // becomes:
+		table.hl {
+		  margin: 2em 0;
+		}
+		table.hl td.ln {
+		  text-align: right;
+		}

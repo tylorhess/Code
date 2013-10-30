@@ -1,0 +1,16 @@
+Create a new Xcode project 
+Single View Application
+Options:
+	Product Name: Matchismo, Attribute // "Project" Name, Folder Name
+	Org Name: Tylor Hess // copywrite <insert org name>
+	Company Identifier: edu.mit.stanfordcs193p.tylor // unique identifier that uniquely identifies app
+	Class Prefix: CardGame, Attribute // <insert class prefix>ViewController
+	Device: iPhone // or iPad or Universal (both)
+	Use Storyboads: always YES // iOS 4+ way of doing View
+	Use Automatic Reference Counting: definitely YES // strong/weak; managing heap
+	Include Unit Tests: NO (for now) // might do it at the end of the quarter
+Save:
+	Directory: tylor:iOS Dev // just choose parent location (it will create the folder)
+	Source Control (git repo): NO (for now) // generally YES (even when solo)
+iOS App:
+	// later
