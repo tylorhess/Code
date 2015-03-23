@@ -1,0 +1,85 @@
+LMP OMAX instructions
+
+design:
+	0.003" fillets convex angles
+	0.030" fillets concave angles (water jet stream diameter)
+	non-filletted angles make the waterjet do weird things
+
+arrive with:
+	.DXF file 
+		in INCHES
+		saved to a USB
+	printed dimensioned drawing (for reference)
+	Requisition Form with account number and signature (from advisor or admin)
+	material (stock)
+		oversize stock by 3" on all sides (hobby shop = 0.5" on all sides)
+		plastic and aluminum are fine
+			ask Bill about anything else
+			stainless steel = hazardous waste (has Chromium in it)
+			copper is also bad
+
+waterjet prep:
+	turn on top water valve to the far right (NOT bottom valve = water on the floor)
+	turn on air valve to the left behind the machine
+		let Bill know if it doesn't get up 80 psi
+	turn on air-related switch under the wooden table
+	turn on black control knob to the right of the computer console
+	turn on the desktop computer
+	make sure there's enough garnet in the machine 
+		don't let water touch anything that has to do with garnet
+		don't add garnet while the machine is running (for fear of splashes)
+	place stock in waterjet machine
+		weigh stock down with lead blocks
+
+
+running waterjet:
+	don't save any files to the computer (save all the files to the USB)
+	OMAX Layout
+		import .DXF file
+		Clean Up button
+			repeat until all 3 categories are 0
+		right-click Quality button
+			set 1, 2, 3, 4, or 5
+			1 = fast, rough
+			5 = slow, precise
+			usually 3 or 4
+		Autopath
+			check every feature to make sure jet is (inside/outside) feature
+		(optional) add tabs using ???? button
+			add tabs to anything less than 1" x 1" (really 2" x 2")
+			maybe right-click something???
+			ask Bill tab thickness/information (no formula, just trial-and-error)
+		export/save as an .ODG file
+	OMAX Make
+		import .ODG file
+		use arrow keys to jog the jet
+			(arrow) = slow jog
+			shift + (arrow) = rapid jog
+			don't cross the lines (don't compress the accordion/bellows)
+		set origin
+		set material thickness
+			add 0.010"-0.015" because it's old
+		place the sponge around the nozzle
+		set the z-axis (nozzle height)
+			use the 0.060" calibration plate
+				touch, then back off a quarter turn
+		lock the z-axis (nozzle height) down
+		raise water level over lead blocks
+		print
+
+after:
+	test > jet
+		place nozzle in between metal slots
+		raise water???
+		raise the nozzle 0.25" above the water
+		press Test button 
+		select jet option (water-only, no garnet)
+		run water-only jet for 15 sec (to flush out the nozzle)
+	shut down computer
+	turn off controls knob after computer is completely shut down
+	turn off air valve (this turns off the air switch automatically after <40psi)
+	turn off water valve (very important)
+	clean machine if we care...
+
+
+

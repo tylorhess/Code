@@ -1,0 +1,6 @@
+compass
+
+$ sudo gem install compass
+$ compass -v 					# check to see that it installed correctly
+$ cd <existing-project-folder>
+$ compass install compass		# creates 

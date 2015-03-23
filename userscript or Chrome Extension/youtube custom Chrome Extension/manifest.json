@@ -1,0 +1,18 @@
+{
+	"manifest_version": 2,	// required
+
+	"name": "Tylor custom Youtube", 			// required?
+	"description": "youtube.focus(); keypress listeners: ] or [ = +0.1 or -0.1 playback speed",	// required?
+	"version": "1.0", 							// required? extension version (not manifest version)
+
+	"content_scripts": [
+		{
+			"matches": ["https://www.youtube.com/*", "http://www.youtube.com/*"],	// required
+			"js": ["youtube.js"]		// optional
+		},
+		{
+			"matches": ["https://www.khanacademy.org/*", "http://www.khanacademy.org/*"],	// required
+			"js": ["khan.js"]		// optional
+		}
+	]
+}

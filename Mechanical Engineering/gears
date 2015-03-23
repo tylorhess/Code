@@ -1,0 +1,46 @@
+units = mm = millimeters (typically)
+
+n = number of teeth
+d = pitch diameter = diameter used if gears are modeled as rolling cylinders
+		d = n * m
+		d = n / p_in
+c = pitch circumference
+		c = 2 * PI * r
+		c = PI * d
+		c = n * p_mm
+
+p_in = pitch in inches (imperial OR English) = teeth per inch along pitch circumference (similar to metric modulus)
+     = 16, 24, 32, 48
+		p_in = n / d
+		p_in = 25.4 / m
+p_mm = pitch in mm (metric) = arclength in mm of 1 tooth along pitch circumference
+		p_mm = c / n 
+		p_mm = PI * d / n
+m = metric modulus (OR module) in mm
+  = 0.3, 1, 2
+		m = p_mm / PI
+		m = d / n
+		m = 25.4 / p_in
+to match gears in inches, match their pitch (p_in) and pressure angle
+to match gears in mm, match their module (and pressure angle?)
+
+pressure angle = the angle between contact points of meshing teeth
+			   = the angle between:
+					the line tangent to pitch circumference
+					the line normal to the gear surface at pitch circumference
+				  OR
+					the line normal to the pitch circumference (a radial line)
+					the line tangent to the gear surface at pitch circumference
+			   = common values (14.5, 20, 25)
+
+gr = gear ratio
+		gr = N_a / N_b (number of teeth)
+		gr = C_a / C_b (pitch circumference)
+		gr = D_a / D_b (pitch diameter)
+		gr = 0_a / 0_b (0 = theta = angle = angular position)
+		gr = w_a / w_b (w = omega = angular velocity)
+	inverted:
+		gr = t_b / t_a (t = tau = torque)
+
+pinion = often the smallest gear in a gear drive train
+	   = often the drive gear

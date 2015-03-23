@@ -1,0 +1,115 @@
+electric motors
+	rotor = part that moves --> turns shaft --> delivers mechanical power
+		permanent magnet (PM)
+		coil/winding (iron core)
+	stator = stationary part
+		permanent magnet (PM)
+		field coil/winding (iron core)
+	commutator = mechanism used to switch current 
+		self-commutated
+		electronically (externally) commutated
+
+
+
+1) magnetic - by far, the most common
+2) electrostatic
+3) piezoelectric
+
+1) DC - now, more common
+2) AC - used to be more common
+
+1) synchronous
+2) asynchronous motor = induction motor = AC motor
+	http://youtu.be/3GI-biC3aP8
+	induction requires: magnetic flux (changing magnetic field and/or moving conductor)
+
+1) motor driver
+	3.3V/5V  (0A) input signal(s) control: direction, speed/voltage, (and torque/current?)
+	12V/24V (60A) power supply (input)
+	0V to 12V/24V (60A) output to power motor
+2) motor controller
+	motor dirver + mirco controller
+
+
+
+types:
+	Brushed DC Motor (DC motor, Brushed Motor) = Electrically Excited DC Motor
+		rotor: windings
+		stator: 
+			permanent magnet (PMDC motor) = low torque
+			windings
+				shunt = rotor & stator windings in parallel
+				series = rotor & stator windings in series = high torque (highest torque:current b/c torque || current^2)
+				compound = parallel & series (shunt & series)
+				separately-excited = different power supplies (more flexibility)
+		commutator: self-commutated (brushed)
+		example: 2.007 simple, 2-wired, hobby motors
+		power: DC
+		control: rpm || V_emf, torque || current
+		pros:
+			inexpensive
+			simple (easy to drive, no controller)
+			available in all shapes and sizes
+		cons:
+			brushes wear down
+			sometimes zero-torque position (brushes touching neither or both rotor windings)
+			internal sparks (fire hazard with combustible gases)
+			radio (RF) noise
+		synchronous
+		often geared
+		V_applied - V_emf = I * R
+		P_mech = I * V
+
+	(Brushed) Universal Motor = AC Series Motor
+		power: both AC and DC
+		same as: DC Series Motor = Brushed DC Motor with rotor windings & stator windings in series using brushed commutator (self-commutated)
+		except: modified slightly to operate on AC power too
+		example: portable power tools, household appliances
+		pros: lightweight, powerful, fast (faster than ACIM 60 Hz = 3600 rpm power line)
+		cons: noisy, energy-inefficient: 30% (small) to 70% (large) 
+
+	Brushless Motor (BL motor) = Brushless DC Motor (BLDM or BLDC motor) = Electronically Commutated Motor (ECM or EC motor)
+		rotor: permanent magnet
+		stator: windings
+		commutator: electrically/externally commutated (controller/driver)
+		example: hard drive (~10,000 rpm)
+		power: DC
+		control: 
+			input? --> [motor controller/driver] --phase-shifted-waveforms--> torque (current control) OR rpm (voltage control)
+						^-- <-- position <-- hall effect sensor <-- magnetic flux --'
+		synchronous
+		Stepper Motor
+			steps = positions of magnetic equilibrium
+			technically, all ECMs are "stepper motors"
+			however, a "stepper motor" typically has teeth (~200)
+				teeth increase the number of quantized/discretized steps (more than )
+					
+	 AC Induction Motor (ACIM) = AC Motor = Induction Motor
+		rotor: conductive/inductive (squirrel cage)
+		stator: windings
+		commutator: electrically/externally commutated (AC current + simple circuit?)
+		http://youtu.be/3GI-biC3aP8
+		example: workhorse of industry (pumps, ...)
+		power: AC
+		control: phase-shifted sinusoidal waveforms (stator frequency/speed > rotor freq/speed)
+		induction --implies--> asynchronous
+			induction requires: magnetic flux (changing magnetic field and/or moving conductor)
+			if synchronous (rotor speed = speed mag field changes), then mag flux = 0
+			therefore: rotor must spin slower than the changing magnetic field
+			thus: asynchronous
+		cons: slow (<60 Hz = 3600 rpm power line)
+	
+	Brushless AC = Permanent Magnet AC (PMAC) = PM Synchronous Motor (PMSM)
+		(AC Induction) x (Brushless DC) --> Brushless AC
+		rotor: PM
+		stator: windings
+		synchronous 
+
+
+
+	servomechanism (servo) - closed-loop, negative-feedback, motor+sensor control loop
+		"servo motor" = any motor with a built-in sensor (typically: encoder)
+
+
+	
+
