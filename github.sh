@@ -50,7 +50,8 @@ $ git push -u origin master	# pushes the "master" branch to "origin" remote (-u 
 # I (or somebody else) made an online repository (that I have write access to?), but I don't have a local copy
 # step 1: check ssh (above)
 cd ~/parentDirectory
-git clone https://github.com/username/reponame.git	# downloads/creates repo locally in current directory
+# git clone https://github.com/username/reponame.git	# downloads/creates repo locally in current directory
+git clone git@github.com:username/reponame.git			# downloads/creates repo locally in current directory
 cd reponame
 git checkout -b newBranch		# RECOMMENDED: create and checkout newBranch (assuming our purpose is to: "make meaningful commits on a named branch")
 # modify files
@@ -197,6 +198,7 @@ $ git fetch RemoteName	# pulls in changes (remote configuration) without modifyi
 ######### git reset (rewind) #########
 git reset --hard HEAD~1		# rewind to 1 commit ago
 git reset --hard ee32762	# rewind back to hash ee32762
+git reset --soft HEAD~1 	# undo `git commit` command, but leave files as they are
 
 ######### misc git #########
 git ls-tree [SHA-1]		# lists (ls) files in a get (branch?); get [SHA-1] from log

@@ -396,6 +396,11 @@ document.getElementsByClassName('class')= $('.class');	// <div class="class">
 document.getElementsByName('name');		= $('[name="elementName"]');	// <input name="elementName">
 document.getElementsByTagName('div');	= $('div');		// <div>
 	node.getElementsByTagName('div');	// node = element within document
+node.parentNode;
+node.childNodes;	// includes whitespace nodes
+node.children;		// excludes whitespace nodes
+node.firstChild;	// includes whitespace nodes
+node.firstElementChild; //excludes whitespace nodes
 node.appendChild(node);
 node.removeChild(node);
 

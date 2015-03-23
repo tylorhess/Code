@@ -149,8 +149,8 @@ first_app/Gemfile
 	gem 'uglifier', '>= 1.3.0'
 	...
 
-	gem gem-name 				installs latest version
-	gem gem-name version-number	installs version `version-number`
+	gem gem-name 				# installs latest version
+	gem gem-name version-number	# installs version `version-number`
 		version:
 			'>= 1.3.0' (i.e. - 7.2.0)
 			'~> 4.0.0' (>= 4.0.0 && < 4.1.0)

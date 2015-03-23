@@ -249,7 +249,13 @@ cp -v	# verbose
 cp -nv	# it tells you "not overwritten" (otherwise you aren't informed if something isn't overwritten)
 cp -R	# allows you to copy directories (recursively)
 
-# remove a file (NOT Trash... ~/.Trash)
+# trash a file
+mv filename.txt ~/.Trash
+
+# empty trash (especially on a mac)
+rm -rf /Volumes/Ext/.Trashes
+
+# remove (permanently delete) a file 
 rm filename.txt			# only removes files
 rm -R directoryName		# files and directories recursively
 
@@ -322,6 +328,16 @@ $PATH
 
 # set $PATH (only lasts for current session)
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin
+
+# typing 'phantomjs' into the terminal doesn't mean anything because it isn't added to the PATH
+$ phantomjs hello.js
+> -bash: phantomjs: command not found
+# place binary/program/executable in a folder that's already in the PATH
+$ echo $PATH
+> /Users/tylor/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/bin:/Users/tylor/.rvm/gems/ruby-2.0.0-p247@global/bin:/Users/tylor/.rvm/rubies/ruby-2.0.0-p247/bin:/Users/tylor/.rvm/bin:/opt/local/bin:/opt/local/sbin:/Users/tylor/bin:/usr/local/bin:/usr/local/mysql/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:/usr/local/git/bin
+$ sudo mv ./phantomjs /usr/bin/phantomjs	# '/usr/bin/' OR '/usr/local/bin' are good choices(bin = binary)
+# OR add executable/program to the PATH
+export PATH=./phantomjs-1.9.7-macosx:$PATH
 
 # where is a command located?
 whereis echo
@@ -482,9 +498,9 @@ ls | tee ls.txt | grep .ptt		# saves stdout of 'ls' command to ls.txt
 # bash script (arguments/parameters --> stdin OR arguments/parameters OR ...)
 File: bashscript.sh
 	#!/bin/bash
-	echo "num arguments entered: $#"	# $# = number of arguments
-	echo "first name: $1"				# $1 = 1st argument, $2 = 2nd argument, ...
-	echo "last name: ${2:-NO_LAST_NAME}"# if ($2 exists) {$2} else {"NO_LAST_NAME"}
+	echo "num arguments entered: $#"	 # $# = number of arguments
+	echo "first name: $1"				 # $1 = 1st argument, $2 = 2nd argument, ...
+	echo "last name: ${2:-NO_LAST_NAME}" # if ($2 exists) {$2} else {"NO_LAST_NAME"}
 $ ./bashscript.sh tylor hess
 > num arguments entered: 2
 > first name: tylor
@@ -615,7 +631,25 @@ export EDITOR='gvim -f'		# gVim
 export EDITOR='mvim -f'		# MacVim
 export EDITOR='emacs'		# emacs
 
+# converting folder <--> .cdr <--> .iso
+hdiutil attach
+hdiutil detach
+hdiutil convert
+hdiutil burn
+hdiutil makehybrid
 
+hdiutil makehybrid -o 				[new] 		[old]
+hdiutil makehybrid -o -iso 			[new].iso 	[old]	# generates ISO9660 (iso file)
+hdiutil makehybrid -o -iso -joliet	[new].iso 	[old]	# generates joilet extensions to ISO9660
+
+# .cdr file --> .iso file
+hdiutil makehybrid -iso -joliet -o new.iso old.cdr
+# folder --> .iso file
+hdiutil makehybrid -iso -joliet -o ~/path/to/new_file.iso ~/path/to/old_folder/
+
+
+# calibre (ebook e-book to text txt converter )
+$ ebook-convert input.epub output.txt
 
 
 
@@ -726,6 +760,9 @@ chmod u+x mnt_cmd
 
 
 
+# Uninstall EasyTether
+cd /System/Library/Extensions/
+sudo kextunload EasyTetherUSBEthernet.kext/
 
 
 ### Setting up PHP & MySQL on OS X 10.7 Lion ###	http://akrabat.com/php/setting-up-php-mysql-on-os-x-10-7-lion/

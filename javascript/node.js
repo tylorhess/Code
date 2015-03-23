@@ -21,6 +21,9 @@ node
 
 node -e "var mr = require('./market-research.js'); mr.marketResearch();"
 
+---------- console.log ----------
+console.log('msg');
+
 ---------- Objects ----------
 // var rufus = new Object();
 var rufus = {

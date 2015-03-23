@@ -3,20 +3,20 @@
 # 1. Install MAMP (Mac OS X, Apache, MySQL, PHP)
 
 # 2. Download wordpress: wordpress.org/download/
-# unzip and install into /Library/WebServer/Documents/wordpress
+# unzip and install into /Library/WebServer/Documents/<folder>
 $ cd /Library/WebServer/Documents 
 $ sudo chown -R _www <folder>		# wordpress folder & all subfolders
 $ sudo chmod -R g+w <folder>		# wordpress folder & all subfolders
 
-# 3. VISIT: localhost/wordpress
-follow instrcutions
-
-# 4. VISIT: localhost/phpMyAdmin
+# 3. VISIT: localhost/phpMyAdmin	OR 		127.0.0.1/phpMyAdmin
 # create database for next step
 MySQL un: root
 MySQL pw: root
 
-# 5. VISIT: localhost/wordpress/wp-admin
+# 4. VISIT: localhost/<folder>/		OR 		127.0.0.1/<folder>/
+follow instrcutions
+
+# 5. VISIT: localhost/<folder>/wp-admin
 install themes and/or plugins
 
 # hackfit
@@ -627,6 +627,7 @@ yoast seo
 edit flow
 shareaholic
 google xml sitemap
+Paid Membership Pro - free plugin for paid monthly subscription to site
 
 ########## youtube channel ##########
 WPwatercooler EP16
@@ -977,7 +978,7 @@ slides: //hotchkissconsulting.com/alot
 	javascript injections
 	//codex.wordpress.org/Data_Validation
 		use:
-			<h1>echo esc_attr($title);</h1>
+			<h1>echo esc_attr ($title);</h1>
 			<p> echo wpkses($body);   </p>
 		instead of:
 			<h1>echo $title; </h1>
@@ -1047,3 +1048,10 @@ images:
 	TinEye.com 					= search (who's pirating your images)
 
 study design
+
+upvote/downvote (like reddit/digg)
+BuddyPress Rate Forum Posts (if already using BuddyPress for social networking)
+Vote It Up
+Likebot
+GD Star Rating
+ThumbsUp
