@@ -1,1 +1,10 @@
-gitignore
+.png
+.jpg
+.jpeg
+.gif
+.bmp
+.tif
+.tiff
+
+.DS_Store
+.DS_Store?
