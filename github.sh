@@ -142,7 +142,7 @@ $ git config --global core.excludesfile '~/.gitignore_global'	#
 
 $ echo "*" >> .gitignore			# ignore current folder (pwd) and all sub-directories
 
-	
+
 
 ######### git checkout & branch #########
 # Which branch am I on?		newBranch

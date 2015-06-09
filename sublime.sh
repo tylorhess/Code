@@ -68,8 +68,13 @@ prettyJSON
 		3) type: 'json min...'    >> 'Pretty JSON: Minify (compress) JSON'
 		3) ...
 
+Git
+	1) cmd + shift + p 			# opens Sublime Package Control
+		2) type: 'git...'
+
 GitGutter # +/-/... in "gutter" tell if added/removed/... since last git commit
-	cmd + shift + opt + k 	
+	cmd + shift + opt + k 	# go to previous "change" = group of lines added/removed/...
+	cmd + shift + opt + j 	# go to next "change"
 
 Bracket Highlighter # places brakcets in the "gutter" (to the left of the line numbers)
 
