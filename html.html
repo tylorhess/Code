@@ -1,4 +1,62 @@
-<!-- id vs. name -->
+<!-- ──────────────────── Simplified HTML5 ──────────────────── -->
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8"> <!-- always first line (tells browser how to parse .html doc as string) -->
+	
+	<link rel="stylesheet" href="css/styles.css?v=1.0">	<!-- css = as HIGH as possible in <head> -->
+	<style type="text/css"></style>						<!-- css = as HIGH as possible in <head> -->
+
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<div></div>	<!-- normal html -->
+
+	<script src="js/scripts.js"></script>     <!-- js = as LOW as possible in <body> -->
+	<script></script>					      <!-- js = as LOW as possible in <body> -->
+</body>
+</html>
+
+<!-- ──────────────────── Basic HTML5 Template ──────────────────── -->
+<!doctype html> <!-- HTML5 DOCTYPE -->
+
+<html lang="en">
+<head>
+	<meta charset="utf-8"> <!-- always first line (tells browser how to parse .html doc as string) -->
+
+	<title>Title</title>
+	<meta name="description" content="description">
+	<meta name="author" content="Tylor">
+
+	<!-- ──────────────────── CSS ────────────────────
+		place as high in the <head> as possible -->
+	<link rel="stylesheet" href="css/styles.css?v=1.0">
+	<style type="text/css"></style>
+
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<!-- place html here -->
+
+	<!-- ──────────────────── javascript ────────────────────
+		place in the <body> (as low as possible for faster load time)
+		minify & gzip .js files
+		document.write(); not recommended -->
+	<script src="js/scripts.js"></script>     <!-- Best Practice: separate html, css, js files (because you can run validation and compression tools on a file) -->
+	<script></script>					      <!-- Recommended -->
+	<!-- DON'T USE: <script type="text/javascript"></script> especially if both "type" & "src" used, file type comes from server, ignores html "type" attribute -->
+</body>
+</html>
+<!-- ──────────────────── End of HTML5 Template ──────────────────── -->
+
+
+<!-- ──────────────────── id vs. name ──────────────────── -->
 <div id="id"></div>	<!-- uniquely identifies html element -->
 <form action="file.php" method="post">	<!-- default: action="#" method="get" -->
 	<input id="id1" name="name1">		<!-- php: $_POST["name1"]; -->
@@ -6,16 +64,16 @@
 	<select id="id3" name="name3">
 </form>
 
-<!-- css
-place as high in the <head> as possible 
--->
 
-<!-- javascript
-place as low  in the <body> as possible (faster load time)
-minify & gzip .js files
-document.write(); not recommended
--->
-<script src="file.js"></script>		<!-- best: because you can run validation and compression tools on .js file -->
-<script></script>					<!-- okay: best to separate html, css, and js -->
-<!-- don't use: <script type="text/javascript"></script>, especially if both "type" & "src" used, file type comes from server, ignores html "type" attribute -->
-
+<!-- ──────────────────── SVG ──────────────────── -->
+<svg width="200" height="200">
+	<rect id="id" class="class"
+		x="0" y="0" 
+		width="100" height="100"
+		fill="blue"
+		stroke="red" stroke-width="5px"
+		rx="8" ry="8" (rounded corners) />
+</svg>
+<script>
+	rect.style.fill = "green"
+</script>>

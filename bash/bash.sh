@@ -547,6 +547,7 @@ sed 's/old/new/g'	# global search (default is first occurrence)
 sed 's/\/usr\/local/\/common\/bin/'	# replace "/usr/local" with "common/bin" ('\' escape character)
 sed 's|/usr/local|/common/bin|'	# replace "/usr/local" with "common/bin"
 sed -r		# use regular expressions	
+sed -n '1p'	# stdout first line (paragraph?) of stdin
 
 # awk (manage comma/tab/... delimited files)
 awk -F'\t'	# tab delimited
@@ -651,7 +652,8 @@ hdiutil makehybrid -iso -joliet -o ~/path/to/new_file.iso ~/path/to/old_folder/
 # calibre (ebook e-book to text txt converter )
 $ ebook-convert input.epub output.txt
 
-
+# slow bash|zsh Terminal?
+sudo rm /private/var/log/asl/*.asl 	# removes all the .asl log files
 
 
 

@@ -2,7 +2,11 @@
 
 # git = tool for managing multiple versions of code at the same time (Directed Acyclic Graph)
 # commit = snapshot of project (code, files, ...) at a particular point in time
-#		   try to avoid committing things like compressed files (zips, rars, jars), compiled code (object files, libraries, executables), database backups, and media files (flv, psd, music, movies)
+#		   try to avoid committing things like:
+#				media files (flv, psd, music, movies)
+#				compressed files (zips, rars, jars), 
+#				compiled code (object files, libraries, executables)
+#				database backups
 # branch = post-it note attached to a node (i.e. - master)
 # HEAD   = points to active branch
 # remote = (clone remote, or create remote "$ git push -u RemoteName branchName" for first time)
@@ -79,6 +83,9 @@ $ git push					# 5. commit file (remotely) = upload (push) changes to github.com
 $ git add file.txt 					# file.txt is "staged for a commit"
 $ git add file1.txt file2.txt ...	# add multiple files
 $ git add .							# add all files (except files/patterns in .gitignore???)
+$ git add --ignore-removal .		# add all files, except ignore deleted files (don't remove them)
+$ git add --all .					# add all files, and pay attention to deleted files (remove them)
+$ git add -A .						# shorthand for --all
 
 $ git status						# show newly added files or previously added ("tracked") files that have been modified
 
@@ -125,10 +132,17 @@ $ git rm --cached file.txt 	# removes (un-adds) file.txt from git repository and
 # but the files themselves are STILL PUSHED
 # ignore things like: compressed files (zips, rars, jars), compiled code (object files, libraries, executables), database backups, and media files (flv, psd, music, movies)
 $ echo "file.txt" >> .gitignore			# ignore file
+$ echo "folder/" >> .gitignore			# ignore folder (and contents)
+$ echo "**/[Tt]humbs.db" >> .gitignore
+$ echo "**/*.DS_Store" >> .gitignore 
 $ echo "/db/*.sqlite3" >> .gitignore	# ignore pattern (all *.sqlite3 files in db folder)
 $ subl .gitignore
 
 $ git config --global core.excludesfile '~/.gitignore_global'	# 
+
+$ echo "*" >> .gitignore			# ignore current folder (pwd) and all sub-directories
+
+	
 
 ######### git checkout & branch #########
 # Which branch am I on?		newBranch
@@ -195,7 +209,9 @@ $ git fetch RemoteName	# pulls in changes (remote configuration) without modifyi
 # offer "newBranch" branch on github.com/tylorhess/reponame to "master" (or other branch) on original author's github.com/username/reponame
 # I am "requesting" that he "pull" my changes (thus, "pull request")
 
-######### git reset (rewind) #########
+######### git reset (undo/rewind) #########
+git reset 					# undo 'git add .'
+git reset filename.txt 		# undo 'git add filename.txt'
 git reset --hard HEAD~1		# rewind to 1 commit ago
 git reset --hard ee32762	# rewind back to hash ee32762
 git reset --soft HEAD~1 	# undo `git commit` command, but leave files as they are
