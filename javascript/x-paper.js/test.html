@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script type="text/javascript">
+		console.log((new Date().getTime()));
+		var callbacks = [];
+		for (var i=0;i<3;i++) {
+			callbacks[i]=(function(i) {
+				
+				return function(){return i;};
+			})(i);
+		}
+		console.log(callbacks[0]()); // 0
+		console.log(callbacks[1]()); // 1
+		console.log(callbacks[2]()); // 2
+
+	</script>
+	<!-- <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/paper.js/0.10.2/paper-full.min.js"></script>
+	<script type="text/javascript">
+		window.onload = function() { // only execute code once DOM is ready
+		// OR: $(document).ready(function() {
+			paper.setup('canvas_id'); // creates empty [Project], binds empty [View] to #canvas_id
+			// OR: paper.setup($('canvas_id')); OR: paper.setup(document.getElementById('canvas_id'));
+			var path = new paper.Path(); // `paper` is the 1 global object
+			path.strokeColor = 'black';
+			var start = new paper.Point(100, 100);
+			path.moveTo(start);
+			var next = start.add([ 200, -50 ]);
+			path.lineTo(next);
+			paper.view.draw();
+
+			
+
+			//----- testing intersection -----//
+			var triangle1 = new paper.Path();
+			triangle1.strokeColor = 'blue';
+			var start = new paper.Point(50, 50);
+			triangle1.moveTo(start);
+			triangle1.lineTo(start.add([ 20, 20 ]));
+			triangle1.lineTo(start.add([ 20,-20 ]));
+			triangle1.closePath();
+
+
+			// paper.projects[0].activate();
+
+			var triangle2 = new paper.Path();
+			triangle2.strokeColor = 'red';
+			var start = new paper.Point(55, 65);
+			triangle2.moveTo(start);
+			triangle2.lineTo(start.add([ 20, 20 ]));
+			triangle2.lineTo(start.add([ 20,-20 ]));
+			triangle2.closePath();
+
+			var intersection = triangle2.intersect(triangle1);
+			intersection.strokeColor = null;
+			intersection.fillColor   = 'green';
+
+			let newProject = new paper.Project('deleteme');
+
+			var compoundPath = new paper.CompoundPath();
+			compoundPath.addChild(triangle1);
+			compoundPath.addChild(triangle2);
+			compoundPath.fillColor = 'black';
+
+		};
+	</script> -->
+</head>
+<body>
+	<div class="float monospace	">
+		&lt;canvas id="canvas_id"&gt;<br/>
+		<canvas id="canvas_id" width="400" height="200" style="border: dashed 1px" ></canvas>
+		<br/>
+		&lt;/canvas&gt;
+	</div>
+	<div class="float monospace	">
+		&lt;canvas id="deleteme"&gt;<br/>
+		<canvas id="deleteme" width="400" height="200" style="border: dashed 1px" ></canvas>
+		<br/>
+		&lt;/canvas&gt;
+	</div>
+</body>
+</html>

@@ -4,14 +4,15 @@
 % https://youtu.be/Q-OzmDen4HU
 function json_out = matchframes(x_min, y_min, x_width, y_height)
 
-    %clc;    % Clear the command window.
-    %close all;  % Close all figures (except those of imtool.)
-    %imtool close all;  % Close all imtool figures.
-    %clear;  % Erase all existing variables.
+    %clc;    % Clear the command window
+    %close all;  % Close all figures (except those of imtool)
+    %imtool close all;  % Close all imtool figures
+    %clear;  % Erase all existing variables
     %format longg;
     %format compact;
-
-    addpath('/Users/tylor/Dropbox (MIT)/tylor (Dropbox MIT)/Code/matlab/jsonlab/');
+    
+    % path should already be added
+    %addpath('/Users/tylor/Dropbox (MIT)/tylor (Dropbox MIT)/Code/matlab/jsonlab/');
 
     % Object Tracking: Match Frames
     image_000000_crop = [172 93 872 686];

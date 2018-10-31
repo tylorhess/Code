@@ -1,12 +1,20 @@
-// install Homebrew
+// install via Homebrew
 $ brew update
-$ brew install mongodb
+$ brew install mongodb 			 // MongoDB
+$ brew install mongodb && mongod // MongoDB & Mongo Daemon (mongod)
 
-// install MacPorts
+// install via MacPorts
 $ sudo port install mongodb
 
+// check that mongodb && mongod are installed
+$ mongod --version
 
-$ mongod &
+// run mongo daemon (MongoDB) in terminal
+$ mongod 
+	$ ^C // ctrl+c ends process
+$ mongod &	// run as background process?
+	$ ps // find 'mongod' process id
+	$ kill -9 <process_id> // end mongod process
 // default: localhost:27017 
 // use the --port and --host options to connect to a server on a different port or interface
 

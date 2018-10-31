@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+svg {
+	background: #000000 url('https://upload.wikimedia.org/wikipedia/commons/2/2f/CRL_Crown_rump_lengh_12_weeks_ecografia_Dr._Wolfgang_Moroder.jpg') no-repeat center center;
+}
+.selection-path {
+	stroke: black;
+	fill: black;
+	stroke-width: 1;
+	fill-opacity: 0.4;
+	stroke-dasharray: 4;
+}
+@keyframes marching-ants {
+	from {stroke-dashoffset: 0;}
+	to   {stroke-dashoffset: 8;}
+}
+@keyframes opacity-strobe {
+	from {fill: black; stroke: white;}
+	to   {fill: white; stroke: black;}
+}
+.selected {
+	/* animation */
+	animation: 
+		marching-ants 0.75s linear 0s infinite normal, 
+		opacity-strobe 6s ease-in-out 0s infinite alternate;
+	/*
+	animation-name: marching-ants;
+	animation-duration: 0.75s;
+	animation-timing-function: linear;
+	animation-delay: 0s;
+	animation-iteration-count: infinite;
+	animation-direction: normal;
+	*/
+	/*
+	animation-name: opacity-strobe;
+	animation-duration: 3s;
+	animation-timing-function: ease-in-out;
+	animation-delay: 0s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	*/
+}
+
+
+</style>
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/paper.js/0.10.2/paper-full.min.js"></script>
+<script type="text/javascript"> 
+window.onload = function() {
+	paper.setup('canvas_id');
+
+	var papers = [paper];
+	var svg = document.getElementById('svg_id');
+	var brushShape, bitmapShape;
+	var brushRadius = 10;
+	var followMouseCircle = new paper.Path.Circle(new paper.Point(0,0), brushRadius);
+	followMouseCircle.strokeColor = 'black';
+	followMouseCircle.visible = false;
+	followMouseCircle.dashArray = [3,3];
+	
+	var isShifted = false;
+	document.onkeydown = checkShiftKey;
+	document.onkeyup   = checkShiftKey;
+	function checkShiftKey(ev) {
+		ev = ev || event; // window.event?
+		var code = ev.keyCode || ev.which;
+		isShifted = !!(ev.shiftKey);
+	}
+	
+
+	paper.view.onMouseEnter = function(event) {
+		followMouseCircle.visible = true;
+	};
+	paper.view.onMouseMove = function(event) {
+		followMouseCircle.position = event.point;
+	};
+	paper.view.onMouseLeave = function() {
+		followMouseCircle.visible = false;
+	};
+	paper.view.onMouseDown = function(event) {
+		var circle = new paper.Path.Circle(event.point, brushRadius);
+		if (brushShape) {
+			// combine this click shape (circle) with cumulative, previous shapes (brushShape)
+			var brushShape_clone = brushShape.clone(); // clone is required to remove previous shapes from <canvas>
+			brushShape.remove(); // remove previous brushShape from <canvas>
+			brushShape = circle.unite(brushShape_clone);
+			circle.remove(); // remove circle from <canvas>
+			brushShape_clone.remove(); // remove clone from <canvas>
+		} else {
+			brushShape = circle;
+		}
+		brushShape.fillColor = '#777777';
+
+	};
+	function addMouseEventToAggregateShape(aggregateShape, event) {
+		var eventShape;
+		if (event.delta) { // if drag event, eventShape is a rounded rectangle
+			
+		} else {
+
+		}
+	}
+	paper.view.onMouseDrag = function(event) {
+		
+		var roundedRectangle = new paper.Path.Rectangle({
+			point:  [event.point.x-event.delta.length-brushRadius,event.point.y-brushRadius],
+			size:   [event.delta.length+2*brushRadius, 2*brushRadius],
+			radius: brushRadius
+		});
+		roundedRectangle.rotate(event.delta.angle, event.point);
+
+		// combine this drag shape (roundedRectangle) with cumulative, previous drag shapes (brushShape)
+		var brushShape_clone = brushShape.clone(); // clone is required to remove previous shapes from <canvas>
+		brushShape.remove(); // remove previous brushShape from <canvas>
+		if (isShifted) {
+			brushShape = brushShape_clone.subtract(roundedRectangle);
+		} else {
+			brushShape = brushShape_clone.unite(roundedRectangle);
+		}
+		roundedRectangle.remove(); // remove roundedRectangle from <canvas>
+		brushShape_clone.remove(); // remove clone from <canvas>
+		brushShape.fillColor = '#777777';
+
+		// brush circle
+		followMouseCircle.position = event.point;
+		followMouseCircle.bringToFront();
+
+		replaceSvgChildrenWith(brushShape);
+		
+	};
+	paper.view.onMouseUp = function() {
+		// brushShape.selected = true;
+		// brushShape.simplify(0);
+
+		rasterize3(brushShape);
+		
+		replaceSvgChildrenWith(brushShape);
+
+	};
+	function replaceSvgChildrenWith(shape) {
+		// remove all previous children
+		while (svg.lastChild) {
+			svg.removeChild(svg.lastChild);
+		}
+
+		// add new child
+		var svgPath = shape.exportSVG();
+		svgPath.setAttribute('class', 'selection-path selected');
+		svg.appendChild(svgPath);
+		// svg.innerHTML = brushShape.exportSVG({asString:true});
+	}
+	function rasterize1(vectorShape) {
+		var start_entire = new Date().getTime();
+
+		var rasterShape;
+		// var inverseRasterShape;
+		var left   = Math.floor(vectorShape.bounds.left);
+		var right  = Math.ceil( vectorShape.bounds.right);
+		var top    = Math.floor(vectorShape.bounds.top);
+		var bottom = Math.ceil( vectorShape.bounds.bottom);
+		var width  = right-left;
+		var height = bottom-top;
+
+		var start_union, end_union, sum_union;
+		var start_intersect, end_intersect, sum_intersect;
+		sum_union = sum_intersect = 0;
+		Array(width).fill().forEach(function(empty,xIndex) {
+			Array(height).fill().forEach(function(empty,yIndex) {
+				var pixel = new paper.Rectangle([left+xIndex,top+yIndex], [1,1]);
+				var pixelPath = new paper.Path.Rectangle(pixel);
+				start_intersect = new Date().getTime();
+				if (vectorShape.intersect(pixelPath).area >= 0.5) {
+					end_intersect = new Date().getTime();
+					sum_intersect += end_intersect - start_intersect;
+					if (rasterShape) {
+						rasterShape_clone = rasterShape.clone();
+						rasterShape.remove();
+						start_union = new Date().getTime();
+						rasterShape = rasterShape_clone.unite(pixelPath);
+						end_union = new Date().getTime();
+						sum_union += end_intersect - start_intersect;
+						pixelPath.remove();
+						rasterShape_clone.remove();
+					} else {
+						rasterShape = pixelPath;
+					}
+				} else {
+					end_intersect = new Date().getTime();
+					sum_intersect += end_intersect - start_intersect;
+				}
+			});
+		});
+
+		var end_entire = new Date().getTime();
+		var sum_entire = end_entire - start_entire;
+		console.log('entire: '+sum_entire+' ms');
+		console.log('intersect: '+sum_intersect+' ms ('+Math.round(100*sum_intersect/sum_entire)+'%)');
+		console.log('union: '+sum_union+' ms ('+Math.round(100*sum_union/sum_entire)+'%)');
+		console.log('both: '+(sum_union+sum_intersect)+' ms ('+Math.round(100*(sum_union+sum_intersect)/sum_entire)+'%)');
+		console.log('perimeter: '+rasterShape.length);
+		return rasterShape;
+	}
+
+	function rasterize2(brushShape) {
+		// create new <canvas>
+		var canvas = document.createElement('canvas');
+		var body = document.getElementsByTagName('body')[0];
+		body.appendChild(canvas); // REQUIRED: append <canvas> to DOM
+		canvas.id = 'this-is-a-random-id-but-its-gotta-be-pretty-long-to-prevent-future-conflicts';
+		canvas.style.border = '1px dashed';
+		// canvas.style.display = 'none';
+		
+		// create new [PaperScope]
+		paper = new paper.PaperScope().setup(canvas.id);
+		papers.push(paper);
+		
+		// paint vectorShape on <canvas>
+		var vectorShape = new paper.PathItem.create(brushShape.pathData);
+		vectorShape.fillColor = '#000000';
+
+		// round vectorShape bounds
+		var left   = Math.floor(vectorShape.bounds.left);
+		var right  = Math.ceil( vectorShape.bounds.right);
+		var top    = Math.floor(vectorShape.bounds.top);
+		var bottom = Math.ceil( vectorShape.bounds.bottom);
+		var width  = right-left;
+		var height = bottom-top;
+
+		// for (each pixel within vectorShape.bounds)
+		var ctx = canvas.getContext('2d');
+		Array(width).fill().forEach(function(empty,xIndex) {
+			Array(height).fill().forEach(function(empty,yIndex) {
+				var x = left+xIndex;
+				var y = top+yIndex;
+				// read <canvas> pixel data
+				var imgData = ctx.getImageData(x, y, 1, 1);
+				var data = imgData.data;
+				
+				var pixel  = {r:data[0],g:data[1],b:data[2],alpha:data[3],gray:(data[0]+data[1]+data[2])/3};
+				if (pixel.alpha != 0 && pixel.gray <= 127) { // mostly black pixel
+					// set full black
+					// data[0] = data[1] = data[2] = 0;
+					
+					// data    = ctx.getImageData(x, y-1, 1, 1).data;
+					// var top    = {r:data[0],g:data[1],b:data[2],alpha:data[3],gray:(data[0]+data[1]+data[2])/3};
+					// data    = ctx.getImageData(x, y, 1, 1).data;
+					// var right  = {r:data[0],g:data[1],b:data[2],alpha:data[3],gray:(data[0]+data[1]+data[2])/3};
+					// data    = ctx.getImageData(x, y, 1, 1).data;
+					// var bottom = {r:data[0],g:data[1],b:data[2],alpha:data[3],gray:(data[0]+data[1]+data[2])/3};
+					// data    = ctx.getImageData(x, y, 1, 1).data;
+					// var left   = {r:data[0],g:data[1],b:data[2],alpha:data[3],gray:(data[0]+data[1]+data[2])/3};
+
+					
+					// if (top    is white) add top    segment
+					// if (right  is white) add right  segment
+					// if (bottom is white) add bottom segment
+					// if (left   is white) add left   segment
+				} else { // mostly white pixel
+					// set full white
+					// imgData.data[0] = 255;
+					// imgData.data[1] = imgData.data[2] = 0;
+					// ctx.putImageData(imgData,x,y);
+					// console.log('red: '+imgData.data);
+					var rect = new paper.Path.Rectangle([x,y],[1,1]);
+					rect.fillColor = '#FF0000';
+				}
+			});
+		});
+		// store segments as nodes {x,y,(top),(right),(bottom),(left)}
+			// if (!nodes[x1][y1])
+				// nodes[x1][y1] = {x:x1, y:y1}
+			// if (!nodes[x2][y2])
+				// nodes[x2][y2] = {x:x2, y:y2}
+			// nodes[x1][y1].top|right|bottom|left = nodes[x2][y2]
+			// nodes[x2][y2].left|bottom|right|top = nodes[x1][y1]
+		// traverse segments
+			// Note: for each node
+				// 1 black, 3 white --> 2 segments
+				// 2 black, 2 white --> 2 segments OR 4 segments
+				// 3 black, 1 white --> 2 segments
+			// if 4 segments
+				// NOT opposite segment (leads to figure-8)
+				// choose 1 of 2 adjacent
+					// if you close path/loop without tranversing the other, you chose the wrong one, so rewind & go the other way
+						// how to rewind to state before decision?
+							// segments array with isTraversed flag saves state
+		
+		// revert to old [PaperScope]
+		paper = papers[0];
+		papers.pop();
+
+		// remove <canvas> from DOM
+		// setTimeout(function() { body.removeChild(canvas); }, 3000);
+
+		return brushShape;//rasterShape;
+	}
+	var group;
+	function rasterize3(brushShape) {
+		// create new <canvas> & [PaperScope]
+		var body = document.getElementsByTagName('body')[0];
+		var canvas = document.createElement('canvas'); 
+		canvas.id = Math.random().toString(36).substr(2); // random [String] to prevent future conflicts
+		canvas.style.border = '1px dashed';
+		// canvas.style.display = 'none';
+		body.appendChild(canvas); // REQUIRED: append <canvas> to DOM, but can be invisible
+		var papers = [paper];
+		paper = new paper.PaperScope().setup(canvas.id);
+		papers.push(paper);
+
+		group = new paper.Group();
+		var vectorShape = new paper.PathItem.create(brushShape.pathData);
+		vectorShape.fillColor = '#000000';
+		var raster = vectorShape.rasterize(72); // 72 dpi (otherwise 150% browser zoom --> 150% raster scaling)
+		vectorShape.remove();
+
+		raster.onLoad = function() {
+			var nodes = {};
+			// for (each pixel within vectorShape.bounds)
+			Array(raster.width).fill().forEach(function(empty,xIndex) {
+				Array(raster.height).fill().forEach(function(empty,yIndex) {
+					var pixelColor = raster.getPixel(xIndex,yIndex);
+					if (isBlack(pixelColor)) { // mostly black pixel
+						// set full black
+						// raster.setPixel(xIndex,yIndex,'#000000');
+						
+						if (yIndex === 0) {
+							addSegment({x:xIndex,y:yIndex},'above',nodes);
+						} else {
+							var aboveColor = raster.getPixel(xIndex,yIndex-1);
+							if (isWhite(aboveColor)) {
+								addSegment({x:xIndex,y:yIndex},'above',nodes);
+							}
+						}
+						if (xIndex === raster.width-1) {
+							addSegment({x:xIndex,y:yIndex},'right',nodes);
+						} else {
+							var rightColor = raster.getPixel(xIndex+1,yIndex);
+							if (isWhite(rightColor)) {
+								addSegment({x:xIndex,y:yIndex},'right',nodes);
+							}
+						}
+						if (yIndex === raster.height-1) {
+							addSegment({x:xIndex,y:yIndex},'below',nodes);
+						} else {
+							var belowColor = raster.getPixel(xIndex,yIndex+1);
+							if (isWhite(belowColor)) {
+								addSegment({x:xIndex,y:yIndex},'below',nodes);
+							}
+						}
+						if (xIndex === 0) {
+							addSegment({x:xIndex,y:yIndex},'left',nodes);
+						} else {
+							var leftColor = raster.getPixel(xIndex-1,yIndex); 
+							if (isWhite(leftColor)) {
+								addSegment({x:xIndex,y:yIndex},'left',nodes);
+							}
+						}
+					} else { // mostly white pixel
+						// set full white
+						// raster.setPixel(xIndex,yIndex,'#FFFFFF');
+					}
+
+				});
+			});
+
+			// console.log(nodes);
+			// raster.scale(4);
+			// raster.position = paper.view.center;
+			// group.scale(4);
+			// group.position = paper.view.center;
+			// group.bringToFront();
+
+			// traverse nodes/segments
+			var firstNode = nodes[Object.keys(nodes)[0]];
+				// Note: for each node
+					// 1 black, 3 white --> 2 segments
+					// 2 black, 2 white --> 2 segments OR 4 segments
+					// 3 black, 1 white --> 2 segments
+				// if 4 segments
+					// NOT opposite segment (leads to figure-8)
+					// choose 1 of 2 adjacent
+						// if you close path/loop without tranversing the other, you chose the wrong one, so rewind & go the other way
+							// how to rewind to state before decision?
+								// segments array with isTraversed flag saves state	
+		};
+		
+		// revert to old [PaperScope]
+		paper = papers[0];
+		papers.pop();
+
+		// remove <canvas> from DOM
+		setTimeout(function() { body.removeChild(canvas); }, 3000);
+
+		//return brushShape;//rasterShape;
+	}
+	function isBlack(color) {
+		return (color.alpha > 0 && color.gray <= 0.5);
+	}
+	function isWhite(color) {
+		return !isBlack(color);
+	}
+	function addSegment(pixel, location, nodes) {
+		// location = 'above'|'right'|'below'|'left'
+		var direction, reverseDirection; // = 'up'|'right'|'down'|'left'
+		var x1,y1,x2,y2;
+		if (location === 'above') {
+			direction = 'right';
+			reverseDirection = 'left';
+			x1 = pixel.x;
+			y1 = pixel.y;
+			x2 = pixel.x+1;
+			y2 = pixel.y;
+		} else if (location === 'right') {
+			direction = 'down';
+			reverseDirection = 'up';
+			x1 = pixel.x+1;
+			y1 = pixel.y;
+			x2 = pixel.x+1;
+			y2 = pixel.y+1;
+		} else if (location === 'below') {
+			direction = 'right';
+			reverseDirection = 'left';
+			x1 = pixel.x;
+			y1 = pixel.y+1;
+			x2 = pixel.x+1;
+			y2 = pixel.y+1;
+		} else if (location === 'left') {
+			direction = 'down';
+			reverseDirection = 'up';
+			x1 = pixel.x;
+			y1 = pixel.y;
+			x2 = pixel.x;
+			y2 = pixel.y+1;
+		}
+		var line = new paper.Path();
+		line.strokeColor = '#00FF00';
+		line.add([x1,y1]);
+		line.add([x2,y2]);
+		group.addChild(line);
+
+		if (!nodes[x1]) {
+			nodes[x1] = {};
+		}
+		if (!nodes[x1][y1]) {
+			nodes[x1][y1] = {x:x1, y:y1};
+		}
+		if (!nodes[x2]) {
+			nodes[x2] = {};
+		}
+		if (!nodes[x2][y2]) {
+			nodes[x2][y2] = {x:x2, y:y2};
+		}
+		nodes[x1][y1][direction]        = nodes[x2][y2];
+		nodes[x2][y2][reverseDirection] = nodes[x1][y1];
+	}
+
+};
+</script>
+
+</head>
+<body>
+	&lt;canvas id="canvas_id"&gt;<br/>
+	<canvas id="canvas_id" width="400" height="200" style="border: dashed 1px" ></canvas>
+	<br/>
+	&lt;/canvas&gt;<br/>
+	&lt;svg id="svg_id"&gt;<br/>
+	<svg id="svg_id" width="400" height="200" style="border:dashed 1px"></svg>
+	<br/>
+	&lt;/svg&gt;<br/>
+</body>
+</html>

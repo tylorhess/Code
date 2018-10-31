@@ -1,0 +1,21 @@
+<svg version="1.1" baseProfile="full"  width="450" height="550" xmlns="http://www.w3.org/2000/svg">
+	<rect x="0" y="0" width="500" height="500" style="stroke:black; fill:none" /> <!-- svg border --> 
+	
+	<defs>
+		<mask id="mask_id" x="0" y="0" width="300" height="300" >
+			<rect x="25" y= "25" width="200" height="100" style="stroke:none; fill: #FFFFFF"/> 
+			<rect x="25" y="125" width="200" height="100" style="stroke:none; fill: #AAAAAA"/> 
+			<rect x="25" y="225" width="200" height="100" style="stroke:none; fill: #555555"/> 
+		</mask>
+	</defs>
+
+	<!-- <g style="mask: url(#mask_id)"> -->
+	<g style="mask: url(http://cdn.mysitemyway.com/etc-mysitemyway/icons/legacy-previews/icons/blue-jelly-icons-alphanumeric/069596-blue-jelly-icon-alphanumeric-plus-sign-simple.png)">
+		<rect x="0" y="0" width="100" height="100" style="fill:red" /><rect x="100" y="0" width="100" height="100" style="fill:blue" /><rect x="200" y="0" width="100" height="100" style="fill:red" /><rect x="300" y="0" width="100" height="100" style="fill:blue" /><rect x="400" y="0" width="100" height="100" style="fill:red" />
+		<rect x="0" y="100" width="100" height="100" style="fill:blue" /><rect x="100" y="100" width="100" height="100" style="fill:red" /><rect x="200" y="100" width="100" height="100" style="fill:blue" /><rect x="300" y="100" width="100" height="100" style="fill:red" /><rect x="400" y="100" width="100" height="100" style="fill:blue" />
+		<rect x="0" y="200" width="100" height="100" style="fill:red" /><rect x="100" y="200" width="100" height="100" style="fill:blue" /><rect x="200" y="200" width="100" height="100" style="fill:red" /><rect x="300" y="200" width="100" height="100" style="fill:blue" /><rect x="400" y="200" width="100" height="100" style="fill:red" />
+		<rect x="0" y="300" width="100" height="100" style="fill:blue" /><rect x="100" y="300" width="100" height="100" style="fill:red" /><rect x="200" y="300" width="100" height="100" style="fill:blue" /><rect x="300" y="300" width="100" height="100" style="fill:red" /><rect x="400" y="300" width="100" height="100" style="fill:blue" />
+		<rect x="0" y="400" width="100" height="100" style="fill:red" /><rect x="100" y="400" width="100" height="100" style="fill:blue" /><rect x="200" y="400" width="100" height="100" style="fill:red" /><rect x="300" y="400" width="100" height="100" style="fill:blue" /><rect x="400" y="400" width="100" height="100" style="fill:red" />
+		<rect x="0" y="500" width="100" height="100" style="fill:blue" /><rect x="100" y="500" width="100" height="100" style="fill:red" /><rect x="200" y="500" width="100" height="100" style="fill:blue" /><rect x="300" y="500" width="100" height="100" style="fill:red" /><rect x="400" y="500" width="100" height="100" style="fill:blue" />
+	</g>
+</svg>

@@ -1,8 +1,8 @@
 
-                              < M A T L A B >
-                  Copyright 1984-2007 The MathWorks, Inc.
-                         Version 7.4.0.287 (R2007a)
-                              January 29, 2007
+                            < M A T L A B (R) >
+                  Copyright 1984-2010 The MathWorks, Inc.
+                Version 7.11.0.584 (R2010b) 64-bit (glnxa64)
+                              August 16, 2010
 
  
   To get started, type one of these: helpwin, helpdesk, or demo.
@@ -281,11 +281,7 @@ json2data =
 ans =
 
 {
-	"empty_0by0_real": {
-		"_ArrayType_": "double",
-		"_ArraySize_": [0,0],
-		"_ArrayData_": null
-	}
+	"empty_0by0_real": null
 }
 
 
@@ -466,6 +462,11 @@ json2data =
 
     astruct: [1x1 struct]
 
+>> 
+ans =
+
+logical
+
 >> >> 
 %=================================================
 >> %  a structure array
@@ -528,14 +529,18 @@ ans =
 				"lenny": 5.00,
 				"squeeze": 6.00,
 				"wheezy": 7.00
-			},
+			}
+		],
+		[
 			{
 				"Ubuntu": [
 					"Kubuntu",
 					"Xubuntu",
 					"Lubuntu"
 				]
-			},
+			}
+		],
+		[
 			[10.04,10.10,11.04,11.10]
 		]
 	]
@@ -545,7 +550,7 @@ ans =
 >> 
 json2data = 
 
-    debian: {{1x3 cell}}
+    debian: {{1x1 cell}  {1x1 cell}  [10.0400 10.1000 11.0400 11.1000]}
 
 >> >> 
 %=================================================
@@ -578,21 +583,25 @@ ans =
 					3
 				]
 			],
-				7
-		],
-		[
 			[
 				4,
 				5
 			],
 			[
-				8,
-				9
+				6
 			]
 		],
 		[
-				6,
+			[
+				7
+			],
+			[
+				8,
+				9
+			],
+			[
 				10
+			]
 		]
 	]
 }
@@ -601,7 +610,7 @@ ans =
 >> 
 json2data = 
 
-    data2json: {{1x2 cell}  [2x2 double]  [6 10]}
+    data2json: {{1x3 cell}  {1x3 cell}}
 
 >> >> 
 %=================================================

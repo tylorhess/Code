@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/paper.js/0.10.2/paper-full.min.js"></script>
+
+<script type="text/paperscript" canvas="canvas_id">
+	var path = new Path();		// Note: inside PaperScript, Paper's objects and functions seem global, through the use of clever scoping
+	path.strokeColor = 'black';
+
+	var start = new Point(100, 100);
+	path.moveTo(start);
+	path.lineTo(start + [ 20, 20 ]); // Note: mathematical operators (+ - * / %) for [Point] and [Size] objects
+
+	// Create a circle shaped path with its center at the center
+	// of the view and a radius of 30:
+	var path = new Path.Circle({
+		center: view.center,
+		radius: 30,
+		strokeColor: 'black'
+	});
+
+	function onResize(event) {
+		// Whenever the window is resized, recenter the path:
+		path.position = view.center;
+	}
+
+	//----- testing intersection -----//
+	var triangle1 = new Path();
+	triangle1.strokeColor = 'blue';
+	var start = new Point(50, 50);
+	triangle1.moveTo(start);
+	triangle1.lineTo(start + [ 20, 20 ]);
+	triangle1.lineTo(start + [ 20, -20 ]);
+	triangle1.closePath();
+
+	var triangle2 = new Path();
+	triangle2.strokeColor = 'red';
+	var start = new Point(55, 65);
+	triangle2.moveTo(start);
+	triangle2.lineTo(start + [ 20, 20 ]);
+	triangle2.lineTo(start + [ 20, -20 ]);
+	triangle2.closePath();
+
+	var intersection = triangle1.intersect(triangle2);
+	intersection.strokeColor = null;
+	intersection.fillColor   = 'green';
+	
+	var svg = document.getElementById('svg_id');
+	// svg.innerHTML = project.exportSVG({asString:true});
+	svg.innerHTML = intersection.exportSVG({asString:true});
+
+	intersection.remove();
+	console.log(intersection);
+</script>
+<script type="text/javascript"> 
+window.onload = function() {
+	// paper.setup('canvas_id');
+
+	// MouseEvent listeners
+	paper.view.onClick       = function(event) {};
+	paper.view.onDoubleClick = function(event) {};
+	paper.view.onMouseEnter = function(event) {};
+	paper.view.onMouseMove  = function(event) {};
+	paper.view.onMouseLeave = function(event) {};
+	paper.view.onMouseDown = function(event) {};
+	paper.view.onMouseDrag = function(event) {};
+	paper.view.onMouseUp   = function(event) {};
+	paper.view.onResize = function(event) {};
+	paper.view.onFrame = function(event) {};
+
+};
+</script>
+</head>
+<body>
+	&lt;canvas id="canvas_id"&gt;<br/>
+	<canvas id="canvas_id" width="400" height="200" style="border: dashed 1px" resize="true"></canvas>
+	<br/>
+	&lt;/canvas&gt;<br/>
+	&lt;svg id="svg_id"&gt;<br/>
+	<svg id="svg_id" width="400" height="200" style="border:dashed 1px"></svg>
+	<br/>
+	&lt;/svg&gt;<br/>
+</body>
+</html>

@@ -1,8 +1,8 @@
 
-                              < M A T L A B >
-                  Copyright 1984-2007 The MathWorks, Inc.
-                         Version 7.4.0.287 (R2007a)
-                              January 29, 2007
+                            < M A T L A B (R) >
+                  Copyright 1984-2010 The MathWorks, Inc.
+                Version 7.11.0.584 (R2010b) 64-bit (glnxa64)
+                              August 16, 2010
 
  
   To get started, type one of these: helpwin, helpdesk, or demo.
@@ -79,7 +79,7 @@
 				"menuitem": [
 					{
 						"value": "_&New",
-						"onclick": "CreateNewDoc(\"\"\")"
+						"onclick": "CreateNewDoc(\"'\\\"Untitled\\\"'\")"
 					},
 					{
 						"value": "_&Open",
@@ -95,7 +95,7 @@
 	}
 }
 
-{"data": {"menu": {"id": "file","value": "_&File","popup": {"menuitem": [{"value": "_&New","onclick": "CreateNewDoc(\"\"\")"},{"value": "_&Open","onclick": "OpenDoc()"},{"value": "_&Close","onclick": "CloseDoc()"}]}}}}
+{"data": {"menu": {"id": "file","value": "_&File","popup": {"menuitem": [{"value": "_&New","onclick": "CreateNewDoc(\"'\\\"Untitled\\\"'\")"},{"value": "_&Open","onclick": "OpenDoc()"},{"value": "_&Close","onclick": "CloseDoc()"}]}}}}
 
 ===============================================
 >> example4.json
@@ -120,25 +120,35 @@
 			"Paper",
 			"Scissors",
 			"Stone"
+		],
+		[
+			"a",
+			"b\\",
+			"c\"",
+			"d\\\"",
+			"e\"[",
+			"f\\\"[",
+			"g[\\",
+			"h[\\\""
 		]
 	]
 }
 
-{"data": [{"sample": {"rho": 1}},{"sample": {"rho": 2}},[[1,0],[1,1],[1,2]],["Paper","Scissors","Stone"]]}
+{"data": [{"sample": {"rho": 1}},{"sample": {"rho": 2}},[[1,0],[1,1],[1,2]],["Paper","Scissors","Stone"],["a","b\\","c\"","d\\\"","e\"[","f\\\"[","g[\\","h[\\\""]]}
 
 >> >> ===============================================
 >> example1.json
-{SUdata{SU	firstNameSUJohnSUlastNameSUSmithSUageiSUaddress{SUstreetAddressSU21 2nd StreetSUcitySUNew YorkSUstateSUNYSU
-postalCodeSU10021}SUphoneNumber[{SUtypeSUhomeSUnumberSU212 555-1234}{SUtypeSUfaxSUnumberSU646 555-4567}]}}
+{Udata{U	firstNameSUJohnUlastNameSUSmithUageiUaddress{UstreetAddressSU21 2nd StreetUcitySUNew YorkUstateSUNYU
+postalCodeSU10021}UphoneNumber[{UtypeSUhomeUnumberSU212 555-1234}{UtypeSUfaxUnumberSU646 555-4567}]}}
 ===============================================
 >> example2.json
-{SUdata{SUglossary{SUtitleSUexample glossarySUGlossDiv{SUtitleCSSU	GlossList{SU
-GlossEntry{SUIDSUSGMLSUSortAsSUSGMLSU	GlossTermSU$Standard Generalized Markup LanguageSUAcronymSUSGMLSUAbbrevSUISO 8879:1986SUGlossDef{SUparaSUHA meta-markup language, used to create markup languages such as DocBook.SUGlossSeeAlso[SUGMLSUXML]}SUGlossSeeSUmarkup}}}}}}
+{Udata{Uglossary{UtitleSUexample glossaryUGlossDiv{UtitleCSU	GlossList{U
+GlossEntry{UIDSUSGMLUSortAsSUSGMLU	GlossTermSU$Standard Generalized Markup LanguageUAcronymSUSGMLUAbbrevSUISO 8879:1986UGlossDef{UparaSUHA meta-markup language, used to create markup languages such as DocBook.UGlossSeeAlso[SUGMLSUXML]}UGlossSeeSUmarkup}}}}}}
 ===============================================
 >> example3.json
-{SUdata{SUmenu{SUidSUfileSUvalueSU_&FileSUpopup{SUmenuitem[{SUvalueSU_&NewSUonclickSUCreateNewDoc(""")}{SUvalueSU_&OpenSUonclickSU	OpenDoc()}{SUvalueSU_&CloseSUonclickSU
+{Udata{Umenu{UidSUfileUvalueSU_&FileUpopup{Umenuitem[{UvalueSU_&NewUonclickSUCreateNewDoc("'\"Untitled\"'")}{UvalueSU_&OpenUonclickSU	OpenDoc()}{UvalueSU_&CloseUonclickSU
 CloseDoc()}]}}}}
 ===============================================
 >> example4.json
-{SUdata[{SUsample{SUrhoi}}{SUsample{SUrhoi}}[[$i#U
+{Udata[{Usample{Urhoi}}{Usample{Urhoi}}[[$i#U[$i#U[$i#U][SUPaperSUScissorsSUStone][CaSUb\SUc"SUd\"SUe"[SUf\"[SUg[\SUh[\"]]}
 >> 

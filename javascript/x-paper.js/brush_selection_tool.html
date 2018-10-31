@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+svg {
+	background: #000000 url('https://upload.wikimedia.org/wikipedia/commons/2/2f/CRL_Crown_rump_lengh_12_weeks_ecografia_Dr._Wolfgang_Moroder.jpg') no-repeat center center;
+	/*background-color: #770000;*/
+}
+.float {
+	float: left;
+}
+.float-end {
+	clear: both;
+}
+.monospace {
+	font-family: monospace;
+}
+.selection-path1 {
+	stroke: white;
+	stroke-width: 0.8;
+	fill: black;
+	fill-opacity: 0.4;
+}
+@keyframes strobe-fill {
+	 0% {fill: black;}
+	50% {fill: white;}
+}
+@keyframes strobe-opacity {
+	  0% {fill-opacity: 0.0;}
+	 25% {fill-opacity: 0.3;}
+	 50% {fill-opacity: 0.0;}
+	 75% {fill-opacity: 0.3;}
+	100% {fill-opacity: 0.0;}
+}
+.strobe {
+	animation: strobe-fill    12s step-end 0s infinite normal,
+			   strobe-opacity 12s linear   0s infinite normal;
+	
+	/*
+	animation-name: opacity-strobe;
+	animation-duration: 3s;
+	animation-timing-function: ease-in-out;
+	animation-delay: 0s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	*/
+}
+.selection-path2 {
+	stroke: black;
+	stroke-width: 1;
+	stroke-dasharray: 4;
+	fill-opacity: 0; /* transparent fill */
+}
+@keyframes march {
+	from {stroke-dashoffset: 0;}
+	to   {stroke-dashoffset: 8;}
+}
+.marching-ants {
+	animation: march 0.75s linear 0s infinite;
+	/*
+	animation-name: marching-ants;
+	animation-duration: 0.75s;
+	animation-timing-function: linear;
+	animation-delay: 0s;
+	animation-iteration-count: infinite;
+	animation-direction: normal;
+	*/
+}
+
+
+
+</style>
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/paper.js/0.10.2/paper-full.min.js"></script>
+<script type="text/javascript">
+//----- graph theory -----//
+// graph
+//		a collection of vertices and edges
+// subgraph
+//		a subset of a graph's edges/vertices
+// undirected graph
+//		edges have no direction (or are bi-directional)
+// directed graph ("digraph")
+//		edges have direction
+// connected/disconnected
+//		a disconnected graph can be divided into separate connected subgraphs that aren't connect by any edges
+//		connected subgraphs can be considered separate graphs
+// walk
+//		(vertex)-edge-(vertex)-edge- ... -edge-(vertex)
+//		can repeat edges and vertices multiple times
+//		can define using only edges
+// trail
+//		a walk that never revists an edge (all edges are distinct)
+//		can define using only vertices (Tylor: What about multiple edges between the same 2 vertices?)
+// path
+//		a walk that never revists a vertex (all vertices and edges are distinct)
+//      a "closed path" can revist the start/end vertex
+//		can define using only vertices (Tylor: What about multiple edges between the same 2 vertices? Which edge is ambiguous.)
+// closed walk/trail/path
+//		starts and ends at the same vertex
+// closed walk  ("cycle", sometimes: "tour")
+// closed trail ("tour" or "circuit")
+// closed path  ("simple cycle", sometimes: "circuit")
+// Euler tour
+//		a trail that vists all of a graph's edges
+// Eulerian circuit/cycle
+//		a closed Euler tour (a closed trail that vists all of a graph's edges)
+
+//		In his 1736 paper on the Seven Bridges of Königsberg, widely considered to be the birth of graph theory, 
+//		Leonhard Euler proved: for a finite undirected graph to have a closed walk that visits each edge exactly once, 
+//		it is necessary and sufficient that it be connected except for isolated vertices 
+//		(that is, all edges are contained in one component) and have even degree at each vertex.
+
+//		Hierholzer's algorithm (https://en.wikipedia.org/wiki/Eulerian_path#Hierholzer.27s_algorithm)
+//		http://www.graph-magics.com/articles/euler.php
+
+// our goal: 
+//		Euler circuit/cycle of connected subgraphs
+//		>< preferred over x (Tylor: really?)
+// our graph: 
+//		undirected
+//		0 odd degrees (degree = 2|4)
+'use strict';
+window.onload = function() {
+	
+	paper.setup('canvas_id');
+	paper.settings.insertItems = false;
+	const PROJECT = paper.project;
+
+	let svg = document.getElementById('svg_id');
+	let aggregateShape;
+	
+
+	// let isShifted = false;
+	// document.onkeydown = checkShiftKey;
+	// document.onkeyup   = checkShiftKey;
+	// function checkShiftKey(ev) {
+	// 	ev = ev || event; // window.event?
+	// 	let code = ev.keyCode || ev.which;
+	// 	isShifted = !!(ev.shiftKey);
+	// }
+
+	let mouseCircleRadius = 10;
+	let mouseCircle = createMouseCircle();
+	paper.view.onMouseEnter = showMouseCircle;
+	paper.view.onMouseMove  = moveMouseCircle;
+	paper.view.onMouseLeave = hideMouseCircle;
+	function createMouseCircle() {
+		let circle = new paper.Path.Circle(new paper.Point(0,0), mouseCircleRadius);
+		circle.strokeColor = 'black';
+		circle.visible = false;
+		circle.dashArray = [3,3];
+		paper.project.activeLayer.addChild(circle);
+		return circle;
+	}
+	function showMouseCircle(event) {
+		mouseCircle.visible = true;
+		mouseCircle.bringToFront();
+	}
+	function moveMouseCircle(event) {
+		mouseCircle.position = event.point;
+		mouseCircle.bringToFront();
+	}
+	function hideMouseCircle(event) {
+		mouseCircle.visible = false;
+	}
+	
+
+	paper.view.onMouseDown = function(event) {
+		addEventShapeToAggShape(event);
+	};
+	paper.view.onMouseDrag = function(event) {
+		addEventShapeToAggShape(event);
+		fillSvgWith(aggregateShape);
+		moveMouseCircle(event);
+	};
+	paper.view.onMouseUp = function(event) {
+		fillSvgWith(aggregateShape);
+		// rasterPathPromise(aggregateShape)
+		// 	.then(function(rasterPath){
+		// 		fillSvgWith(aggregateShape, rasterPath);
+		// 	})
+		// 	.catch(function(err){console.error(err)});
+		// rasterize1(aggregateShape);
+	};
+
+	function addEventShapeToAggShape(event) { // in onMouseDown()/onMouseDrag()
+		// create eventShape
+		let eventShape;
+		if (event.type === 'mousedrag') { // if ('mousedrag') eventShape is a rounded rectangle
+			eventShape = new paper.Path.Rectangle({
+				point:  [event.point.x-event.delta.length-mouseCircleRadius,event.point.y-mouseCircleRadius],
+				size:   [event.delta.length+2*mouseCircleRadius, 2*mouseCircleRadius],
+				radius: mouseCircleRadius
+			});
+			eventShape.rotate(event.delta.angle, event.point);
+		} else { // if ('mousedown') eventShape is a circle
+			eventShape = new paper.Path.Circle(event.point, mouseCircleRadius);
+		}
+		// eventShape.fillColor = '#777777';
+
+		if (!aggregateShape || aggregateShape.area === 0) { // if aggregateShape doesn't exist, aggregateShape = eventShape (if they aren't holding shift)
+			if (!event.modifiers.shift) {
+				aggregateShape = eventShape;
+				paper.project.activeLayer.addChild(aggregateShape);
+			}
+		} else { // if aggregateShape exists, add/subtract (union/difference) eventShape to/from it
+			if (event.modifiers.shift) {
+				aggregateShape = aggregateShape.subtract(eventShape);
+			} else {
+				aggregateShape = aggregateShape.unite(eventShape);
+			}
+			// aggregateShape.fillColor = '#777777';
+		}	
+	}
+	function fillSvgWith(aggregateShape, rasterShape) { // in onMouseDrag()/onMouseUp()
+		// remove all previous children
+		while (svg.lastChild) {
+			svg.removeChild(svg.lastChild);
+		}
+
+		// add new child
+		let deepClone = true;
+		let vectorShape1 = aggregateShape.exportSVG();
+		let vectorShape2 = vectorShape1.cloneNode(deepClone);
+		
+		if (rasterShape) {
+			var bitmapShape = rasterShape.exportSVG();
+			bitmapShape.setAttribute('class', 'strobe');
+			vectorShape2.setAttribute('class', 'selection-path1');
+			svg.appendChild(bitmapShape);
+			svg.appendChild(vectorShape2);
+		} else {
+			vectorShape2.setAttribute('class', 'selection-path1 strobe');
+			svg.appendChild(vectorShape2);
+		}
+		vectorShape1.setAttribute('class', 'selection-path2 marching-ants');
+		svg.appendChild(vectorShape1);
+	}
+	function rasterize1(vectorShape) { // in onMouseUp()
+		let start_entire = new Date().getTime();
+
+		let rasterShape;
+		// let inverseRasterShape;
+		let left   = Math.floor(vectorShape.bounds.left);
+		let right  = Math.ceil( vectorShape.bounds.right);
+		let top    = Math.floor(vectorShape.bounds.top);
+		let bottom = Math.ceil( vectorShape.bounds.bottom);
+		let width  = right-left;
+		let height = bottom-top;
+
+		let start_union, end_union, sum_union;
+		let start_intersect, end_intersect, sum_intersect;
+		sum_union = sum_intersect = 0;
+		Array(width).fill().forEach(function(empty,xIndex) {
+			Array(height).fill().forEach(function(empty,yIndex) {
+				let pixel = new paper.Rectangle([left+xIndex,top+yIndex], [1,1]);
+				let pixelPath = new paper.Path.Rectangle(pixel);
+				start_intersect = new Date().getTime();
+				if (vectorShape.intersect(pixelPath).area >= 0.5) {
+					end_intersect = new Date().getTime();
+					sum_intersect += end_intersect - start_intersect;
+					if (rasterShape) {
+						start_union = new Date().getTime();
+						rasterShape = rasterShape.unite(pixelPath);
+						end_union = new Date().getTime();
+						sum_union += end_intersect - start_intersect;
+					} else {
+						rasterShape = pixelPath;
+					}
+				} else {
+					end_intersect = new Date().getTime();
+					sum_intersect += end_intersect - start_intersect;
+				}
+			});
+		});
+
+		let end_entire = new Date().getTime();
+		let sum_entire = end_entire - start_entire;
+		console.log('entire: '+sum_entire+' ms');
+		console.log('intersect: '+sum_intersect+' ms ('+Math.round(100*sum_intersect/sum_entire)+'%)');
+		console.log('union: '+sum_union+' ms ('+Math.round(100*sum_union/sum_entire)+'%)');
+		console.log('both: '+(sum_union+sum_intersect)+' ms ('+Math.round(100*(sum_union+sum_intersect)/sum_entire)+'%)');
+		console.log('perimeter: '+rasterShape.length);
+		return rasterShape;
+	}
+	
+	// function rasterize3(pathItem) {
+	function rasterPathPromise(pathItem) { // in onMouseUp()
+		return new Promise(function(resolve, reject) {
+			// create new temporary <canvas> & [PaperScope]
+			// let canvas = createTemporaryCanvas();
+			let canvas = document.getElementById('deleteme');
+			const TEMP_PROJECT = new paper.Project(canvas);
+			// tempProject.activate(); // automatically
+
+			let pathItem_clone = pathItem.clone();
+			pathItem_clone.fillColor = '#000000';
+			let raster = pathItem_clone.rasterize(72); // 72 dpi (otherwise 150% browser zoom --> 150% raster scaling)
+			raster.onLoad = function() {
+				let graph = createGraph(raster);
+				let trails = traverse(graph); // trails = [Array] (1 trail per connected graph)
+				let rasterPathOnTempCanvas = createShape(trails);
+				let rasterPathOnMainCanvas = new paper.PathItem.create(rasterPathOnTempCanvas.pathData);
+				rasterPathOnTempCanvas.selected = true;
+				rasterPathOnTempCanvas.fillColor = new paper.Color(1,0,0,0.3);
+
+				let group = new paper.Group();
+				group.addChild(raster);
+				group.addChild(rasterPathOnTempCanvas);
+				group.position = paper.view.center;
+				group.scale(7);
+				paper.project.activeLayer.addChild(group);
+
+				PROJECT.activate();
+				paper.project.activeLayer.addChild(rasterPathOnMainCanvas);
+				rasterPathOnMainCanvas.selected = true;
+				TEMP_PROJECT.activate();
+				
+				// delete temporary [Project] & <canvas>
+				// TEMP_PROJECT.remove();
+				// deleteTemporaryCanvas(canvas);
+				
+				resolve(rasterPathOnMainCanvas);
+			};
+		});
+	}
+	function createGraph(raster) { // in rasterPathPromise()
+		let graph = {
+			vertices: {
+				length: 0
+			},
+			edges: {
+				length: 0
+			}
+		};
+		// for (each pixel in raster.bounds)
+		let center = raster.position;
+		let offset = {
+			x: center.x - raster.width /2,
+			y: center.y - raster.height/2
+		};
+		for (let xIndex = 0; xIndex < raster.width; xIndex++) {
+			for (let yIndex = 0; yIndex < raster.height; yIndex++) {
+				let pixel = {x:xIndex,y:yIndex};
+				let pixelColor = raster.getPixel(pixel);
+				if (isBlack(pixelColor)) { // mostly black pixel
+					// set full black
+					// raster.setPixel(xIndex,yIndex,'#000000');
+					
+					if (yIndex === 0) {
+						addEdge('above',pixel,offset,graph);
+					} else {
+						let aboveColor = raster.getPixel(xIndex,yIndex-1);
+						if (isWhite(aboveColor)) {
+							addEdge('above',pixel,offset,graph);
+						}
+					}
+					if (xIndex === raster.width-1) {
+						addEdge('right',pixel,offset,graph);
+					} else {
+						let rightColor = raster.getPixel(xIndex+1,yIndex);
+						if (isWhite(rightColor)) {
+							addEdge('right',pixel,offset,graph);
+						}
+					}
+					if (yIndex === raster.height-1) {
+						addEdge('below',pixel,offset,graph);
+					} else {
+						let belowColor = raster.getPixel(xIndex,yIndex+1);
+						if (isWhite(belowColor)) {
+							addEdge('below',pixel,offset,graph);
+						}
+					}
+					if (xIndex === 0) {
+						addEdge('left',pixel,offset,graph);
+					} else {
+						let leftColor = raster.getPixel(xIndex-1,yIndex); 
+						if (isWhite(leftColor)) {
+							addEdge('left',pixel,offset,graph);
+						}
+					}
+				} else { // mostly white pixel
+					// set full white
+					// raster.setPixel(xIndex,yIndex,'#FFFFFF');
+				}
+
+			}
+		}
+
+		return graph;
+	}
+	function isBlack(color) { // in createGraph()
+		return (color.alpha > 0 && color.gray <= 0.5);
+	}
+	function isWhite(color) { // in createGraph()
+		return !isBlack(color);
+	}
+	function addEdge(location, pixel, offset, graph) { // in createGraph()
+		// location = 'above'|'right'|'below'|'left'
+		let direction, reverseDirection; // = 'up'|'right'|'down'|'left'
+		let x1,y1,x2,y2;
+		if (location === 'above') {
+			direction = 'right';
+			reverseDirection = 'left';
+			x1 = offset.x+pixel.x;
+			y1 = offset.y+pixel.y;
+			x2 = offset.x+pixel.x+1;
+			y2 = offset.y+pixel.y;
+		} else if (location === 'right') {
+			direction = 'down';
+			reverseDirection = 'up';
+			x1 = offset.x+pixel.x+1;
+			y1 = offset.y+pixel.y;
+			x2 = offset.x+pixel.x+1;
+			y2 = offset.y+pixel.y+1;
+		} else if (location === 'below') {
+			direction = 'right';
+			reverseDirection = 'left';
+			x1 = offset.x+pixel.x;
+			y1 = offset.y+pixel.y+1;
+			x2 = offset.x+pixel.x+1;
+			y2 = offset.y+pixel.y+1;
+		} else if (location === 'left') {
+			direction = 'down';
+			reverseDirection = 'up';
+			x1 = offset.x+pixel.x;
+			y1 = offset.y+pixel.y;
+			x2 = offset.x+pixel.x;
+			y2 = offset.y+pixel.y+1;
+		}
+		// let line = new paper.Path();
+		// line.strokeColor = '#00FF00';
+		// line.add([x1,y1]); // top or left point
+		// line.add([x2,y2]); // bottom or right point
+		// group.addChild(line);
+
+		
+		if (!graph.vertices[x1]) {
+			graph.vertices[x1] = {};
+		}
+		if (!graph.vertices[x1][y1]) {
+			graph.vertices[x1][y1] = {x:x1, y:y1};
+			graph.vertices.length++;
+		}
+		if (!graph.vertices[x2]) {
+			graph.vertices[x2] = {};
+		}
+		if (!graph.vertices[x2][y2]) {
+			graph.vertices[x2][y2] = {x:x2, y:y2};
+			graph.vertices.length++;
+		}
+		graph.vertices[x1][y1][direction]        = graph.vertices[x2][y2];
+		graph.vertices[x2][y2][reverseDirection] = graph.vertices[x1][y1];
+
+		
+		graph.edges['('+x1+','+y1+')('+x2+','+y2+')'] = {
+			pt1: graph.vertices[x1][y1],
+			pt2: graph.vertices[x2][y2]
+		};
+		graph.edges.length++;
+	}
+	// input:  graph = undirected, disconnected graph
+	// output: [Array] 1 trail per undirected, connected graph
+	function traverse(graph) {  // in rasterPathPromise()
+		// graph = undirected, connected graphs
+		// graph.vertices[xIndex][yIndex] = {
+		//          x: xIndex,
+		//          y: yIndex,
+		//		(top): graph.vertices[otherIndex][anotherIndex]
+		//    (right): graph.vertices[otherIndex][anotherIndex]
+		//   (bottom): graph.vertices[otherIndex][anotherIndex]
+		//     (left): graph.vertices[otherIndex][anotherIndex]
+		// }
+		// graph.edges[`(${x1},${y1})(${x2},${y2})`] = {
+		//	pt1: graph.vertices[x1][y1],
+		//	pt2: graph.vertices[x2][y2]
+		//};
+		
+		
+		let trails = []; // [Array] of closed trails
+		let untraversedEdges = graph.edges;
+		while (Object.keys(untraversedEdges).length) {
+			// choose 1st edge (e0), 1st vertex (v0), and 2nd vertex (v1)
+			let e0Key = Object.keys(untraversedEdges)[0];
+			let e0 = untraversedEdges[e0Key];
+			let v0 = e0.pt1;
+			let v1 = e0.pt2;
+
+			let trail = step([v0,v1]);
+			trails.push(trail);
+			untraversedEdges = removeTrailFromEdges(trail,untraversedEdges);
+		}
+
+		return trails;
+	}
+	function step(trail) { // in traverse()
+		let vThis = trail[trail.length-1]; // current  vertex
+		let vPrev = trail[trail.length-2]; // previous vertex
+		
+
+		if (vThis === trail[0]) { // if (vThis is the first vertex in the trail)
+			return trail;		  // 	Then, we're done! We've closed the loop!
+		} else {
+			let vNext;
+			if (vThis.up && vThis.right && vThis.down && vThis.left) { // if 4-way intersection (degree(vThis) === 4)
+				// turn left/right (NOT straight because opposite leads to figure-8)
+				let [vLeft, vStraight, vRight] = orientVertices(vPrev, vThis);
+				
+				//----- approach 1 -----//
+				// connected subgraph --> 1 shape (Eulerian, non-figure-8)
+				// cons: slow, complex
+				// let trailLeft  = [];
+				// let trailRight = [];
+				// if (!alreadyTraversed(trail, vLeft)) {
+				// 	trailLeft = step([...trail, vLeft]);
+				// }
+				// if (!alreadyTraversed(trail, vRight)) {
+				// 	trailRight = step([...trail, vRight]);
+				// }
+					
+				// if (trailLeft.length > trailRight.length) {
+				// 	vNext = vLeft;
+				// } else { // if (trailRight.length >= trailLeft.length)
+				// 	vNext = vRight;
+				// }
+
+				//----- approach 2 -----//
+				// connected subgraph --> odd: 1 shape (Eulerian, figure-8); even: multiple shapes (non-Eulerian, overlapping)
+				// pros: fast, simple, 1 less point, CompoundPath handles shapes
+				vNext = vStraight;
+
+				//----- approach 3 -----//
+				// connected subgraph --> multiple separate shapes OR multiple nested shapes
+				// pros: fast, simple, CompoundPath handles shapes
+				// vNext = vLeft|vRight;
+			} else if (vThis.up && (vThis.up !== vPrev) ) {
+				vNext = vThis.up;
+			} else if (vThis.right && (vThis.right !== vPrev) ) {
+				vNext = vThis.right;
+			} else if (vThis.down && (vThis.down !== vPrev) ) {
+				vNext = vThis.down;
+			} else if (vThis.left && (vThis.left !== vPrev) ) {
+				vNext = vThis.left;
+			} else {
+				// 1 black, 3 white --> degree(vThis) === 2
+				// 2 black, 2 white --> degree(vThis) === 2|4
+				// 3 black, 1 white --> degree(vThis) === 2
+				throw 'TylorError: degree(vThis) !== 2|4';
+				console.error(vThis);
+			}
+
+			return step([...trail,vNext]);
+		}
+	}
+	function orientVertices(vPrev, vThis) { // in step()
+		if        (vPrev === vThis.up) {
+			return [vThis.right,vThis.down,vThis.left];
+		} else if (vPrev === vThis.right) {
+			return [vThis.down,vThis.left,vThis.up];
+		} else if (vPrev === vThis.down) {
+			return [vThis.left,vThis.up,vThis.right];
+		} else if (vPrev === vThis.left) {
+			return [vThis.up,vThis.right,vThis.down];
+		} else {
+			throw 'TylorError: vPrev ('+vPrev.x+','+vPrev.y+') isn\'t next to vThis ('+vThis.x+','+vThis.y+')';
+		}
+	}
+	function alreadyTraversed(trail, vNext) {
+		let vThis = trail[trail.length-1]; // current vertex
+		for (let i = 0; i < trail.length-1; i++) {
+			let v0 = trail[i];
+			let v1 = trail[i+1];
+			if ( (v0 === vThis && v1 === vNext) || (v0 === vNext && v1 === vThis) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	function removeTrailFromEdges(trail,edges) { // in traverse()
+		for (let i = 0; i < trail.length-1; i++) { // -1 (i=0), -1 (vertex-->edges), +1 (1st vertex = last vertex)
+			let vThis = trail[i];
+			let vNext = trail[i+1];
+			let edgeKeyA = '('+vThis.x+','+vThis.y+')('+vNext.x+','+vNext.y+')';
+			let edgeKeyB = '('+vNext.x+','+vNext.y+')('+vThis.x+','+vThis.y+')';
+			if        (edges[edgeKeyA]) {
+				delete edges[edgeKeyA];
+			} else if (edges[edgeKeyB]) {
+				delete edges[edgeKeyB];
+			} else {
+				throw 'TylorError: Cannot find edge to delete: edges[\''+edgeKeyA+'\']|edges[\''+edgeKeyB+'\']';
+			}
+		}
+		return edges;
+	}
+	function createShape(trails) { // in rasterPathPromise()
+		let compoundPath = new paper.CompoundPath();
+		for (let trail of trails) {
+			let paperTrail = new paper.Path();
+			paperTrail.moveTo(trail[0]); // move to first vertex
+			for (let i = 1; i < trail.length; i++){
+				if (i === trail.length-1) { // if last point (which should be same as first point)
+					paperTrail.closePath(); // close the trail
+				} else {
+					let prevPt = new paper.Point(trail[i-1]);
+					let thisPt = new paper.Point(trail[ i ]);
+					let nextPt = new paper.Point(trail[i+1]);
+					let vectorA = prevPt.subtract(thisPt);
+					let vectorB = thisPt.subtract(nextPt);
+					if (!vectorA.isCollinear(vectorB)) {
+						paperTrail.lineTo(trail[i]); // line to each subsequent vertex
+					}
+				}
+			}
+			
+			compoundPath.addChild(paperTrail);
+		}
+
+		return compoundPath;
+	}
+	function createTemporaryCanvas() { // in rasterPathPromise()
+		let body = document.getElementsByTagName('body')[0];
+
+		// create new <canvas> & [PaperScope]
+		let canvas = document.createElement('canvas'); 
+		canvas.id = Math.random().toString(36).substr(2); // random [String] to prevent future conflicts
+		canvas.style.display = 'none';
+		// canvas.style.border = '1px dashed';
+		// canvas.style.width  = 400;
+		// canvas.style.height = 200;
+		
+		body.appendChild(canvas); // REQUIRED: append <canvas> to DOM, but can hide (display:none)
+
+		return canvas;
+	}
+	function deleteTemporaryCanvas(canvas) { // in rasterPathPromise()
+		let body = document.getElementsByTagName('body')[0];
+		body.removeChild(canvas);
+		// setTimeout(function() { body.removeChild(canvas); }, 3000);
+	}
+	
+
+};
+</script>
+
+</head>
+<body>
+	<div style="position:absolute;">
+		<svg id="svg_id" width="800" height="400" style="border: dashed 1px"></svg>
+	</div>
+	<div style="position:absolute;">
+		<canvas id="canvas_id" width="800" height="400" style="border: dashed 1px" ></canvas>
+	</div>
+	<!-- <div class="float monospace	">
+		&lt;canvas id="canvas_id"&gt;<br/>
+		<canvas id="canvas_id" width="400" height="200" style="border: dashed 1px" ></canvas>
+		<br/>
+		&lt;/canvas&gt;
+	</div>
+	<div class="float monospace">
+		&lt;svg id="svg_id"&gt;<br/>
+		<svg id="svg_id" width="400" height="200" style="border: dashed 1px"></svg>
+		<br/>
+		&lt;/svg&gt;
+	</div>
+	<div class="float-end"></div>
+	<div class="monospace">
+		&lt;canvas id="deleteme"&gt;<br/>
+		<canvas id="deleteme" width="800" height="400" style="border: dashed 1px" ></canvas>
+		<br/>
+		&lt;/canvas&gt;
+	</div> -->
+</body>
+</html>

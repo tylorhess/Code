@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>d3</title>
+	<!-- .css -->
+	<style type="text/css">
+		
+	</style>
+
+	<!-- .js -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+</head>
+<body>
+	
+	<!-- javascript -->
+	<script>
+		// draw svg
+		var width  = 1920/2;
+		var height = 1200/2;
+		var svg = d3.select("body").append("svg")
+			.attr("width", width)
+			.attr("height", height);
+		var grp = svg.append("g");
+		
+		// zoom
+		var zoomListener = d3.behavior.zoom() // create zoom listener
+			.scaleExtent([1, 20])
+			.on("zoom", onzoom); 			  // attach onzoom event to zoom listener
+		function onzoom() { // create onzoom event
+			var trans = d3.event.translate;
+			var scale = d3.event.scale;
+			
+			// limit panning [Note: there is no .translateExtent()]
+			/* vertical-only   panning */ trans[0] = 0; // disable horizontal panning (in the x-direction)
+			/* horizontal-only panning */ trans[1] = 0; // disable vertical   panning (in the y-direction)
+			/* left   wall */ if (trans[0] > 0) trans[0] = 0;	
+			/* top    wall */ if (trans[1] > 0) trans[1] = 0;
+			/* right  wall */ if (trans[0]-width  < -( width*scale) ) trans[0] = -( width*scale-width ); 
+			/* bottom wall */ if (trans[1]-height < -(height*scale) ) trans[1] = -(height*scale-height);
+			zoomListener.translate(trans);
+
+			// geometric zooming = normal zooming
+			grp.attr("transform", "translate(" + trans + ")scale(" + scale + ")"); // zoom in on <g>...</g>
+			// semantic  zooming = as you zoom in, circles remain the same size (seemingly decrease in size)
+			grp.selectAll('circle').attr('r', 5/scale);
+		}
+		svg.call(zoomListener); // attach zoomListener to <svg>
+		
+		// add <rect> to <g>
+		grp.append('rect')
+			.attr("width",  width+20)
+			.attr("height", height+20)
+			.attr("x", -10)
+			.attr("y", -10)
+			.attr("fill", "yellow");
+		// add image to <g>
+		grp.append('image')
+			.attr("xlink:href", "http://khongthe.com/wallpapers/animals/fantasy-wolf-106623.jpg") // 1920x1200
+			.attr("x",0)
+			.attr("y",0)
+			.attr("width", width)//1920
+			.attr("height",height)//1200
+		// add circles to <g>
+		var randX = d3.random.normal(width /2, 0.25*width );
+		var randY = d3.random.normal(height/2, 0.25*height);
+		var dataset = d3.range(250).map(function() {
+			return { 
+				x: randX(), 
+				y: randY() 
+			};
+		});
+		grp.selectAll("circle")
+			.data(dataset)
+			.enter().append("circle")
+			.style("fill", "blue")
+			.attr("r", 5)
+			.attr("transform", function(d) { return "translate("+d.x+", "+d.y+ ")"; });
+		
+		
+
+		
+
+		// var scaleX = d3.scale.linear()
+		// 	.domain([0, width])
+		// 	.range( [0, width]);
+		// var scaleY = d3.scale.linear()
+		// 	.domain([0, height])
+		// 	.range( [height, 0]);
+		// var behav_zoom = d3.behavior.zoom()
+		// 	.x(scaleX)
+		// 	.y(scaleY)
+		// 	.scaleExtent([0.25, 4])
+		// 	.on("zoom", zoom);
+		
+
+
+
+	// old
+	var $scope = {};
+	$scope.container = {};
+	$scope.container.width  = 500;
+	$scope.container.height = 300;
+	var randX = d3.random.normal($scope.container.width /2, 0.34*$scope.container.width );
+	var randY = d3.random.normal($scope.container.height/2, 0.34*$scope.container.height);
+	var dataset = d3.range(100).map(function() {
+		return { 
+			x: randX(), 
+			y: randY() 
+		};
+	});
+	var xScale = d3.scale.linear()
+		.domain([0, $scope.container.width])
+		.range( [0, $scope.container.width]);
+	var yScale = d3.scale.linear()
+		.domain([0, $scope.container.height])
+		.range( [$scope.container.height, 0]);
+	var behav_zoom = d3.behavior.zoom()
+		.x(xScale)
+		.y(yScale)
+		.scaleExtent([.25, 4])
+		.on("zoom", zoom);
+	var svg = d3.select("body").append("svg")
+		.attr("width",  $scope.container.width)
+		.attr("height", $scope.container.height)
+		.append("g")
+			.call(behav_zoom);
+	svg.append("rect")
+		//.attr("class", "overlay")
+		.style("fill", "none")
+		.style("pointer-events", "all")
+		.attr("width",  $scope.container.width)
+		.attr("height", $scope.container.height);
+	var circles = svg.selectAll("circle")
+		.data(dataset)
+		.enter().append("circle")
+			.style("fill", "red")
+			.attr("r", 5)
+			.attr("transform", transform);
+	function zoom() {
+		circles.attr("transform", transform);
+	}
+	function transform(d,i) {
+		return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")";
+	}
+	</script>
+</body>
+</html>

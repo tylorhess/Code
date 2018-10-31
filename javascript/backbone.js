@@ -1,4 +1,16 @@
 backbone.js = Model View Controller (MVC)
+	// Model (represents view)
+	var model = new Backbone.Model({
+		name: ''							// model.name = '';
+	});
+	// View (visualizes model)
+	model.on('change:name', function(){
+		$('span').html(model.get('name')); 	// <span>{{model.name}}</span>
+	});
+	// Controller (changes model based on user input)
+	$('input').on('keyup', function(){		 // input.onkeyup(function() {
+		model.set('name', $('input').val()); // 	model.name = input.val()
+	});										 // }
 
 index.html
 	Router ("/", "/edit/:id", "/new")

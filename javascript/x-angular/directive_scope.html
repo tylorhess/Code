@@ -1,0 +1,141 @@
+<html ng-app="miscApp">
+	<head>
+		<meta charset="utf-8">
+		<title>Angular.js Template</title>
+		<!-- css -->
+		<style type="text/css">
+
+		</style>
+		
+		<!-- javascript -->
+		<!--[if lt IE 9]>
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<![endif]-->
+		<!--[if gte IE 9]><!-->
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<!--<![endif]-->
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular-route.min.js"></script>
+		<script src="https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
+		<script src="https://cdn.firebase.com/libs/angularfire/1.0.0/angularfire.min.js"></script>
+		<script>
+			var miscApp = angular.module("miscApp", ["firebase"]);
+			miscApp.run(['$rootScope', '$log', function($rootScope, $log){
+				$rootScope.$log = $log;
+			}])
+			miscApp.controller("MiscCtrl", 
+				[       "$scope","$firebaseArray",
+				function($scope , $firebaseArray) {
+					$scope.msg = 'zero';
+					$scope.input = true;
+					$scope.message = 8708;
+					// $scope.message = function() {
+					// 	return $scope.input;
+					// };
+					$scope.class = function(obj) {
+						return typeof(obj);
+					};
+					$scope.str = function(obj) {
+						return JSON.stringify(obj);
+					};
+					// console.log($scope.$log);
+				}]
+			);
+			miscApp.directive('myDirective', [function(){
+				return {
+					scope: {
+						msg: '&'
+					},
+					// controller: function($scope, $element, $attrs, $transclude) {},
+					// require: 'ngModel', // Array = multiple requires, ? = optional, ^ = check parent elements
+					// restrict: 'A', // E = Element, A = Attribute, C = Class, M = Comment
+					template: '<div>Directive: {{msg+" ["+class(msg)+"]"}}</div><input type="text" >',
+					link: function($scope, iElm, iAttrs, controller) {
+						$scope.class = function(obj) {
+							return typeof(obj);
+						};
+						$scope.str = function(obj) {
+							return JSON.stringify(obj);
+						};
+					}
+				};
+			}]);
+			miscApp.controller('ParentCtrl', function() {
+				var parent = this;
+				parent.a = 1;
+			});
+			miscApp.controller('ChildCtrl', function($scope) {
+				var child = this;
+				child.b = 2;
+				child.test = $scope.$parent.p.a;
+				console.log($scope);
+			});
+
+
+angular
+	.module('miscApp')
+	.directive('eDir', function eDir($timeout) {
+		return {
+			restrict: 'E',
+			scope: {
+				attr: '='
+			},
+			template: '<div>$scope.attr: {{attr}}</div><div>eDirCtrl.attr: {{eDirCtrl.attr}}</div>',
+			controller: function EDirCtrl($scope) {
+				var eDirCtrl = this;
+				eDirCtrl.attr = $scope.attr;
+				$timeout(function() {
+					$scope.attr = '$scope.attr';
+				}, 3000);
+			},
+			controllerAs: 'eDirCtrl'
+		};
+	}); 
+
+angular
+	.module('miscApp')
+	.directive('aDir', function aDir($timeout) {
+		return {
+			restrict: 'A',
+			require: 'eDir',
+			link: linkFn
+		};
+
+		function linkFn(scope, element, attrs, eDirCtrl) {
+			$timeout(function() {
+				eDirCtrl.attr = 'eDirCtrl.attr';
+			}, 6000);
+		}
+	});
+		</script>
+	</head>
+	<body ng-controller="MiscCtrl as misc">
+		<div>Parent: {{message+" ["+class(message)+"]"}}</div><input type="text" ng-model="input">
+		<my-directive msg="message()"></my-directive>
+		<my-directive msg="message()"></my-directive>
+		<my-directive msg="message()"></my-directive>
+		<br><br><br>
+		<div ng-repeat-start="(key, value) in {a:true,b:false,c:95}"></div>
+			{{$index}}. {{key}}: {{value}},
+		<div ng-repeat-end></div>
+
+		<br><br><br>
+		<div ng-controller="ParentCtrl as p">
+			within parent (p), outside child (c): <br>
+			p.a = {{p.a}} <br>
+			p.b = {{p.b}} <br>
+			c.b = {{c.b}}
+			<div ng-controller="ChildCtrl as c">
+				within parent (p), inside child (c): <br>
+				p.a = {{p.a}} <br>
+				$scope.$parent.p.a = {{c.test}} <br>
+				c.a = {{c.a}} <br>
+				c.b = {{c.b}}
+			</div>
+		</div>
+
+		<br><br><br>
+		<input type="text" ng-model="msg"><br>
+		<e-dir a-dir attr="msg"></e-dir>
+	</body>
+</html>

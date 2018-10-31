@@ -27,10 +27,6 @@ $ node
 > ...
 > .exit
 
---------------- console (stdout) ---------------
-console.log('msg');
-console.error(err); // err = Error object
-
 -------------------- process --------------------
 // access command-line arguments
 $ node /path/to/filename.js arg1 arg2 arg3
@@ -41,7 +37,7 @@ $ ps | grep node --> 28285 ttys000    0:00.14 node
 > process.pid --> 28285
 
 --------------- global variables ---------------
-__dirname  --> "/Users/tylor"
+__dirname  --> "/Users/tylor" 				// similar to terminal's `$ pwd` 
 __filename --> "/Users/tylor/filename.js"
 
 -------------------- buffer --------------------
@@ -125,12 +121,6 @@ CustomStream.prototype._transform = function(data, encoding, callback) {	// Tran
 
 // see: "node_stream.js" (file) for more about Streams
 
--------------------- util --------------------
-var util = require('util');			// can NOT simplify to: require('util').inherits(New, Old);
-var NewClass = function() {...};	// (constructor)
-util.inherits(NewClass, OldClass);	// place immediately after constructor 
-// NewClass inherits from OldClass
-
 
 -------------------- require --------------------
 var mod = require('./modulename.js');	// .js is optional
@@ -144,8 +134,15 @@ require('fs').writeFile('./file.json', JSON.stringify(obj));	// write an object 
 try {
 	var mod = require('./nonexistent');
 } catch (e) {
-	e.code --> MODULE_NOT_FOUND
+	e.code --> 'MODULE_NOT_FOUND'
 }
+
+---------------------------------------------
+--------------- core modules ----------------
+---------------------------------------------
+// you need to: require('core_modules');
+// but you don't need to: `npm install core_modules`
+
 
 -------------------- modules --------------------
 // modulename.js
@@ -161,13 +158,11 @@ inst.var
 inst.func()
 
 
-
-
-
----------------------------------------------
---------------- core modules ----------------
----------------------------------------------
-
+-------------------- util --------------------
+var util = require('util');			// can NOT simplify to: require('util').inherits(New, Old);
+var NewClass = function() {...};	// (constructor)
+util.inherits(NewClass, OldClass);	// place immediately after constructor 
+// NewClass inherits from OldClass
 
 
 ---------------- fs (file system) ----------------
@@ -181,17 +176,45 @@ var buf = fs.readFileSync('/path/to/filename.txt') --> [Buffer Object]
 fs.readFile('/path/to/filename.txt', function(err, fileContents){ fileContents --> [Buffer Object] });
 fs.readdir('/path/to/directory/', function(err, filelist){ filelist --> [Array of Strings] });
 
+// writeFile replaces file, if it already exists
 fs.writeFile('./file.txt', 'line1');
 fs.writeFile('./file.txt', 'line1', function(err) {if (err) throw err;});
+
+
+
+function mkdir(dir, callback) {
+	fs.mkdir(dir, function(err) {
+		if (!err || err.code === 'EEXIST')	// if (success || directory exists already)
+			callback();						//		continue...
+		else 								// else if (err)	// unexpected error
+			callback(err);					// 		continue with error message...
+	});
+}
+// alternatively: npm mkdirp; var mkdirp = require('mkdirp'); mkdirp('/tmp/foo/', function (err) {...}); // mkdir -p (recursively)
+
+-------------------- readline --------------------
+const readline = require('readline');
+const fs = require('fs');
+
+const rl = readline.createInterface({
+  input: fs.createReadStream('sample.txt'),
+  crlfDelay: Infinity
+});
+
+rl.on('line', (line) => {
+  line --> [String]
+  console.log(`Line from file: ${line}`);
+});
+
 
 -------------------- http --------------------
 // http (web) server
 var http = require('http');
 var server = http.createServer(handler);				// handler = function <-- var express = require('express'); var app = express();
 var server = http.createServer(function (req, res) {
-  /* request */ req --> [(Readable) Stream Object] /* response */ res --> [(Writable) Stream Object]
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');								// responds to every request with "Hello World"
+	/* request */ req --> [(Readable) Stream Object] /* response */ res --> [(Writable) Stream Object]
+	res.writeHead(200, {'Content-Type': 'text/plain'});
+	res.end('Hello World\n');								// responds to every request with "Hello World"
 });
 server.listen(1337, '127.0.0.1');							// listens on http://127.0.0.1:1337/
 
@@ -228,37 +251,131 @@ var url_obj    =    url.parse('http://images.www.url.com:1338/api/user/3219?id=3
 		url_obj.port 	  -->                           '1338'
 	url_obj.path 		  -->                                '/api/user/3219?id=3219&pin=5542'
 		url_obj.pathname  -->                                '/api/user/3219'
-		url_obj.search 	  -->                                '?id=3219&pin=5542'
-	url_obj.query  		  --> 								{id:'3219',pin:'5542'}
+		url_obj.search 	  -->                                              '?id=3219&pin=5542'
+	url_obj.query  		  -->                                              {id:'3219',pin:'5542'}
+
+
+-------------------- path --------------------
+var path = require('path');									// Windows
+var path_obj = path.parse('/home/user/dir/file.txt')		path.parse(C:\path\dir\file.txt)
+	path_obj.root  -->    '/'									-->    C:\
+	path_obj.dir   -->    '/home/user/dir'						-->    C:\path\dir
+	path_obj.base  -->                   'file.txt'				-->                file.txt       
+	path_obj.name  -->                   'file'					-->                file
+	path_obj.ext   -->                       '.txt'				-->                    .txt
+
+// terminology you'll find on the Internet (DOES NOT exactly correspond with `path` variable names)
+// 		path          = folders + filename (all of the characters needed to identify a file on a filesystem)
+//		relative path = relative paths start from current folder (e.g. - './' or '../../')
+//		absolute path = absolute paths start from root folder (e.g. - '/')
+// 		filename      = basename + extension (sometimes)
+// 		basename      = filename - extension (sometimes)
+// 		extention     = file extention
 
 
 ---------------- child_process ----------------
 // execute bash|shell|Terminal command
 
-//  exec (for simple commands)
-var exec = require('child_process').exec;
-var cmd = exec('cat *.js bad_file | wc -l', function (error, stdout, stderr) {
-	console.log('stdout: ' + stdout);
-	console.log('stderr: ' + stderr);
-	if (error !== null) {console.log('exec error: ' + error);}
+//-------- exec (for simple commands) --------//
+var cmd = require('child_process').exec('cat *.js bad_file | wc -l', function (error, stdout, stderr) {
+	if (error ) { console.log('error: '  + error ); } // (error === null, when no error)
+	if (stdout) { console.log('stdout: ' + stdout); }
+	if (stderr) { console.log('stderr: ' + stderr); }
 });
 
-//  spawn (for more complex commands)
-var spawn = require('child_process').spawn;
-var cmd = spawn('ls', ['-la', '/Users/tylor']);
-cmd.stdout.on('data', function(data) { console.log("stdout: "+data) });	// stdout's  "on data"  event
-cmd.stderr.on('data', function(data) { console.log("stderr: "+data) });	// stderr's  "on data"  event
-cmd.on('close', function(code) { if (code!==0) console.log("exit code: "+code); });	// command's "on close" event
-cmd.stdin.write(data);
+//----- spawn (for more complex commands) -----//
+var cmd = require('child_process').spawn('command', ['-arg1 -arg2', '-arg3']);
+var ls  = require('child_process').spawn('ls',      ['-la',  '/Users/tylor']);
+
+// matlab
+var mat = require('child_process').spawn('/Applications/MATLAB_R2015a.app/bin/matlab', ['-nojvm -nodisplay -nosplash']);
+
+/* either 'error' or 'exit' is always fired before 'close' */
+mat.on('error', function(err)          { console.err('ERROR: ',err) }); // fired (instead of 'exit') if error (e.g. - invalid bash command)
+mat.on('exit',  function(code, signal) { console.log('matlab process exited with code: ', code, ' or signal: ', signal) });	// fired if no error
+/* 'close' is always fired after either 'error' or 'exit' */
+mat.on('close', function(code, signal) { console.log('matlab process closed with code: ', code, ' or signal: ', signal) });
+	
+	
+mat.stdout.on('data', function(data) { console.log("stdout: "+data) });	 // stdout's "on data"  event
+mat.stderr.on('data', function(data) { console.log("stderr: "+data) });	 // stderr's "on data"  event
+mat.stdin.write("x=10 \n"); // outputs to stdout
+mat.stdin.write("x=11;\n"); // DOES NOT output to stdout (because ';' means "suppress output" in matlab)
+mat.stdin.write("quit;\n"); /* same as: */ mat.stdin.end(); /* similar to: */ mat.kill();
+mat.stdin.end(); // terminates stdin [Writable Stream] (then terminates process, after executing all stdin commands)
+mat.kill();
+
+mat.removeAllListeners();
+mat.removeAllListeners('close');
+mat.stdout.removeAllListeners('data');
+
+process.stdin.pipe(mat.stdin);	 // terminal input --> matlab input
+mat.stdout.pipe(process.stdout); // matlab output  --> terminal output
+mat.stderr.pipe(process.stderr); // matlab error   --> terminal error
 
 
 
+// python
+// var py = require('child_process').spawn('python');
+// ...
+// py.stdin.write("print 'output to stdout'\n"); // outputs to stdout
+// py.stdin.write("open('deleteme.txt','w')\n"); // DOES NOT output anywhere that I know of (which is weird, because it does output when executed in bash terminal)
+// py.stdin.write("exit()\n"); /* similar to: */ py.kill();
+// py.stdin.end();
+
+---------------- process ----------------
+process // gloabl node variable, referencing the node process itself (NOT child processes)
+process.stdin // see: [Stream]
+process.stdin.write('typing'); // simulates: user typing into terminal
+process.stdin.end();		   // simulates: ctrl+d (^D) = end of file (EOF) = exit running process (node)
+process.stdout // see [Stream]
+process.exit();  // success
+process.exit(1); // failure
+process.on('exit', function(code) {})
 
 
+---------------- readline ----------------
+var readline = require('readline');
+// var rl = readline.createInterface(process.stdin, process.stdout);
+var rl = readline.createInterface({
+	input:  process.stdin,
+	output: process.stdout//,
+	// completer: function() {}, //
+	// terminal: (false)|true, // false checks isTTY() on output stream upon instantiation; true treats input/output streams as TTY (has ANSI/VT100 escape codes written to it)
+	// historySize: 30 // (default) line history length
+});
+
+rl.setPrompt('ty> ');   // (default) what to place before the cursor each time the user is prompted for input
+rl.prompt();			// gets realine ready for user input
+
+rl.write('typed'); // simulates typing into console/terminal
+rl.write(null, {ctrl: true, name: 'u'}); // simulates typing ctrl+u (delete line)
+
+console.log('output'); // outputs to console/terminal
+
+rl.on('line', function(line) {
+	line = line.trim();
+	switch(line) {
+		case 'close':
+			rl.close(); // similar to: process.stdin.end() // ctrl+d (^D) || ctrl+c (^C)
+			break;
+		default:
+			console.log('echo `' + line + '`');
+			break;
+	}
+	rl.prompt(); // gets realine ready for user input
+});
+
+rl.on('close', function() { // fired: rl.close() || process.stdin.end() // ctrl+d (^D) || ctrl+c (^C)
+	console.log('Have a great day!');
+	process.exit(0);
+});
 
 ---------------------------------------------
 --------------- npm  modules ----------------
 ---------------------------------------------
+// you need to: require('npm_modules'),
+// and you need to: npm install npm_modules
 
 -------------------- npm --------------------
 // npm = Node Packaged Modules [npmjs.org]
@@ -267,268 +384,385 @@ cmd.stdin.write(data);
 // 		echo $PATH
 // 		>> ...:/usr/local/bin:...
 
+//---------- once per project ----------//
+// first setup git/github
+$ npm init // creates package.json via step-by-step guide
+
+//---------- once per computer (if package.json exists) ----------//
+// example: just cloned a git repo
+$ npm install // installs all package.json dependencies onto this computer (in current directory)
+
+//---------- once per `require('<package>')` ----------//
+$ npm install <package> // defaults to: --save (as of npm 5.0)
+$ npm install --save <package>	// installs <package> & adds <package> to package.json dependencies & saves a local copy of the package into ./node_modules/<package>/
+
+// npm install options
 $ npm install <package>			// installs to current directory
 $ npm install -g <package>		// installs globally (entire computer)
 $ npm install --save <package>	// installs & adds <package> to package.json dependencies & saves a local copy of the package into ./node_modules/<package>/
 $ npm install 					// installs package.json dependencies to current directory
 // package.json = actual JSON (Note: "quotes"), NOT object literal (without quotes)
 {
-  "name": "module-name", 	/* required */
-  "version": "10.3.1",		/* required */
-  "description": "An example module to illustrate the usage of a package.json",
-  "author": "Your Name <you.name@example.org>",
-  "contributors": [
-    {
-      "name": "Foo Bar",
-      "email": "foo.bar@example.com"
-    }
-  ],
-  "dependencies": { 		/* dependencies */
-    "express": "4.2.x",
-    "primus": "*",
-    "async": "~0.8.0",
-    "winston": "git://github.com/flatiron/winston#master",
-    "bigpipe": "bigpipe/pagelet",
-    "plates": "https://github.com/flatiron/plates/tarball/master"
-  },
-  "devDependencies": {		/* developer dependencies */
-    "vows": "^0.7.0",
-    "assume": "<1.0.0 || >=2.3.1 <2.4.5 || >=2.5.2 <3.0.0",
-    "pre-commit": "*"
-  },
-  "bin": {
-    "module-name": "./bin/module-name"
-  },
-  "scripts": {
-    "test": "vows --spec --isolate",
-    "start": "node index.js",
-    "predeploy": "echo im about to deploy",
-    "postdeploy": "echo ive deployed",
-    "prepublish": "coffee --bare --compile --output lib/foo src/foo/*.coffee"
-  },
-  "main": "lib/foo.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nodejitsu/browsenpm.org"
-  },
-  "bugs": {
-    "url": "https://github.com/nodejitsu/browsenpm.org/issues"
-  },
-  "keywords": [
-    "nodejitsu",
-    "example",
-    "browsenpm"
-  ],
-  "preferGlobal": true,
-  "private": true,
-  "publishConfig": {
-    "registry": "https://your-private-hosted-npm.registry.nodejitsu.com"
-  },
-  "subdomain": "foobar",
-  "analyze": true,
-  "license": "MIT"
+	"name": "module-name", 	/* required */
+	"version": "10.3.1",		/* required */
+	"description": "An example module to illustrate the usage of a package.json",
+	"author": "Your Name <you.name@example.org>",
+	"contributors": [
+		{
+			"name": "Foo Bar",
+			"email": "foo.bar@example.com"
+		}
+	],
+	"dependencies": { 		/* dependencies */
+		"express": "4.2.x",
+		"primus": "*",
+		"async": "~0.8.0",
+		"winston": "git://github.com/flatiron/winston#master",
+		"bigpipe": "bigpipe/pagelet",
+		"plates": "https://github.com/flatiron/plates/tarball/master"
+	},
+	"devDependencies": {		/* developer dependencies */
+		"vows": "^0.7.0",
+		"assume": "<1.0.0 || >=2.3.1 <2.4.5 || >=2.5.2 <3.0.0",
+		"pre-commit": "*"
+	},
+	"bin": {
+		"module-name": "./bin/module-name"
+	},
+	"scripts": {
+		"test": "vows --spec --isolate",
+		"start": "node index.js",
+		"predeploy": "echo im about to deploy",
+		"postdeploy": "echo ive deployed",
+		"prepublish": "coffee --bare --compile --output lib/foo src/foo/*.coffee"
+	},
+	"main": "lib/foo.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nodejitsu/browsenpm.org"
+	},
+	"bugs": {
+		"url": "https://github.com/nodejitsu/browsenpm.org/issues"
+	},
+	"keywords": [
+		"nodejitsu",
+		"example",
+		"browsenpm"
+	],
+	"preferGlobal": true,
+	"private": true,
+	"publishConfig": {
+		"registry": "https://your-private-hosted-npm.registry.nodejitsu.com"
+	},
+	"subdomain": "foobar",
+	"analyze": true,
+	"license": "MIT"
 }
 
 $ npm list|ls 	// list all installed packages (and their dependent packages)
 
 
 
--------------------- jquery --------------------
-// server-side jQuery
-
--------------------- sequelize --------------------
-// maps js objects to sql (relational database)
-
--------------------- mongoose --------------------
-var mongoose = require('mongoose');
-mongoose.connect();
-
--------------------- coffee-script --------------------
-// shorthand javascript
-
--------------------- backbone --------------------
-// model-view-presenter (MVP) app design
-
---------------- css-sprite --------------- 
-// turn many images into one image + .css file
-
---------------- mongodb --------------- 
-var mongoClient = require('mongodb').MongoClient;
-
-var port = 27017;
-var host = "localhost";
-var database = "ticker";
-var collName = "ticker";
-var url = "mongodb://"+host+":"+port+"/"+database;
-
-
-mongoClient.connect(url, function(dbErr, db){
-	if (dbErr)
-		console.log(dbErr); 
-	
-	db.collection(collName, {w:1}, function(collErr, collection) {
-		if (collErr)
-			console.log(collErr);
-		
-		collection.find().toArray(function(findErr, items) {
-			if (findErr)
-				console.log(findErr);
-			//for (object in items)
-			for (var i = 0; i < 10 && i < items.length; i++)
-				console.log(items[i]);
-		});
-	});
-});
-
 -------------------- express --------------------
 var express = require('express');
 var app = express();				// app = function = http.createServer(app)
+var port = 3002;
 
-// static file server (app.configure)
-var express = require('express');
-var app = express();
-app.configure(function(){
-	app.use('/', express.static(__dirname));
-	//app.use('/public', express.static(__dirname+'/public'));
-		--> appurl.com/filename.html 	<-- ./filename.html
-		--> appurl.com/folder/file.html <-- ./folder/file.html
-});
-app.listen(1337); // listening on: http://localhost:1337/
-
-// POST/GET request (app.post/app.get)
-var express = require('express');
-var app = express();
-
+//----- parse: req.body --------------------//
+// to parse contentType: 'application/json' 				{"a":0,"b":{"c":1}}		$.ajax({contentType: 'application/json'}) 
 var bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({ extended: true })); // to parse: a=0&b[c]=1 			$.ajax({contentType: 'application/x-www-form-urlencoded'})
-app.use(bodyParser.json()); 						// to parse: {"a":0,"b":{"c":1}}	$.ajax({contentType: 'application/json'}) 
-var multer = require('multer'); 
-app.use(multer()); 									// to parse: "multipart/form-data"
+app.use(bodyParser.json());
+// to parse contentType: 'application/x-www-form-urlencoded'  a=0&b[c]=1 			$.ajax({contentType: 'application/x-www-form-urlencoded'})
+var bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: true }));
+// to parse contentType: 'multipart/form-data' 										$.ajax({contentType: 'multipart/form-data'})
+var multer = require('multer');
+app.use(multer());
 
- app.post('/user', /* parser, */ function(req, res) {
-//app.get('/user' , /* parser, */ function(req, res) {
-	
-	---------- req ----------
-	req --> [Stream Object] (Readable)
+//--------- app.use (static server) ---------//
+app.use('/', express.static(__dirname)); 		--> res.sendFile(__dirname+'/'+req.path)
 
-	// require('body-parser')
-	// POST/GET: a=0&b[c]=1 				// URL encoding    "application/x-www-form-urlencoded"
-	// POST/GET: { "a":0, "b":{"c":1} } 	// JSON encoding   "application/json"
-	req.body
-		req.body.a   --> "0" /* URL */   --> 0 /* JSON */
-		req.body.b.c --> "1" /* URL */   --> 1 /* JSON */
+//-------------- app.route --------------//
+app.route('/user/:id')
+	.get( function(req, res) {...}) // get user
+	.post(function(req, res) {...}) // create new user
+	.put( function(req, res) {...}) // update user
 
-	// GET: a=0&b[c]=1 	// URL encoding
-	req.query
-		req.query.a   --> "0"
-		req.query.b.c --> "1"
+//-------------- app.get|post --------------//
+// one callback function
+app.get( '/user', /* parser, */ callback); 
+app.get( '/user', /* parser, */ function(req, res) {...});
 
-	// GET http://images.www.url.com:1337/folder/file.html?a=0&b[c]=1
-	req.protocol 	--> "http"
-	req.subdomains  --> ["www", "images"]
-	req.hostname 	--> "url.com"
-	req.ip 			--> "18.123.204.98" 				// (if "trust proxy" setting is enabled)
-	req.path 		--> "folder/file.html" 				// url path
-	req.orginalUrl 	--> "/folder/file.html?a=0&b[c]=1" 	// echos everything after hostname:port
-	
-	// GET url.com/user/tylor (routing: /user/:name)
-	req.params.name --> "tylor"
-	// GET url.com/file/js/file.js (routing: /file/*)
-	req.params[0]   --> "js/file.js"
+// sequence of callback functions
+app.post('/user', /* parser, */ [cb0, cb1, ..., cb3]); // in cb0, next = cb1; in cb1, next = cb2; cb3 has no next() function
+app.post('/user', /* parser, */ function(req, res, next) {...; next();}, ..., function(req, res) {...});
 
-	// other stuff... 
-	req.route
-	req.app
-	req.ips --> ["client", "proxy1", "proxy2"]  // (if "trust proxy" setting is true)
-	req.baseUrl /* similar to */ app.mountpath
-	req.secure /* same as */ ('https' == req.protocol)
-	// req.cookies && req.signedCookies
-	// req.fresh && req.stale
-	// req.xhr
+// route using: req.params
+app.post('/user/:id/photo/:pid',       function(req, res) {...});
+	req.params.uid 		--> 219836
+	req.params.pid 		--> 8123
+app.post('/file/*',         function(req, res) {...});
+	req.params[0]       --> "css/style.css"
 
-	--------------- res ---------------
-	res --> [Stream Object] (Writable)
+// pseudo-RegExp [String]
+app.get([String],   function(req, res) {...});
+app.get('/ab?cd',   function(req, res) {...}); // matches: 'acd' & 'abcd' (optional  'b')
+app.get('/(ab)?cd', function(req, res) {...}); // matches:  'cd' & 'abcd' (optional 'ab')
+app.get('/ab+cd',   function(req, res) {...}); // matches: 'acd' & 'abcd' & 'abbbbcd' (optional # of b's)
+app.get('/ab*cd',   function(req, res) {...}); // matches:         'abcd' & 'abXXXcd' (anything between 'ab' & 'cd')
 
-	res.end(); 			// sends "empty" response (no data)
-	res.write();		// streaming response
-		res.write('msg');				// String
-		res.write(buf); 				/* Buffer */ new Buffer('msg') // (creates Buffer from String)
-	res.send('msg');	// non-streaming response
-		res.send('msg');				// String
-		res.send(buf); 					/* Buffer */ new Buffer('msg') // (creates Buffer from String)
-		res.send({});					// Object
-		res.send([]);					// Array
-		
+// [RegExp]
+app.get([RegExp], function(req, res) {});
+app.get(/a/,      function(req, res) {}); // any route with an 'a' in it
+app.get(/.*fly$/, function(req, res) {}); // any route that ends with 'fly'?
 
-	res.json();
-	
-
-	res.attachment('/path/to/filename.jpg');
-	// HTTP Response Header
-	//		Content-Disposition: attachment; filename
-	//		Content-Type: 
-
-	res.append('field', 'value'); // appends field=value to HTTP Response Header
-		res.append('Link', ['<http://localhost/>', '<http://localhost:3000/>']);
-		res.append('Set-Cookie', 'foo=bar; Path=/; HttpOnly');
-		res.append('Warning', '199 Miscellaneous warning');
-	res.set
-
-});
-app.listen(1337); // listening on: http://localhost:1337/
+//----- app.listen (start server) -------//
+app.listen(port);
+app.listen(port, callback);
+app.listen(port, function() { console.log('listening at http://localhost:'+port); });
 
 
-// manually create
-app.get('/file/:name', function (req, res, next) {
-	var options = {
-		root: __dirname + '/public/',
-		dotfiles: 'deny',
-		headers: {
-			'x-timestamp': Date.now(),
-			'x-sent': true
-		}
+
+//---------- req ----------//
+req --> [Stream Object] (Readable)
+
+// require('body-parser') || require('multer')
+// 		POST/GET: { "a":0, "b":{"c":1} } 		// JSON encoding   "application/json"
+// 		POST/GET: a=0&b[c]=1 					// URL encoding    "application/x-www-form-urlencoded"
+req.body
+	req.body.a   --> "0" /* URL */   --> 0 /* JSON */
+	req.body.b.c --> "1" /* URL */   --> 1 /* JSON */
+
+// GET: a=0&b[c]=1 	// URL encoding
+req.query
+	req.query.a   --> "0"
+	req.query.b.c --> "1"
+
+// GET: http://images.www.url.com:1337/folder/file.html?a=0&b[c]=1
+req.protocol 	--> "http"
+req.subdomains  --> ["www", "images"]
+req.hostname 	--> "url.com"
+req.ip 			--> "18.123.204.98" 				// (if "trust proxy" setting is enabled)
+req.path 		--> "folder/file.html" 				// url path
+req.orginalUrl 	--> "/folder/file.html?a=0&b[c]=1" 	// echos everything after hostname:port
+
+// GET: url.com/user/tylor (routing: /user/:name)
+req.params.name --> "tylor"
+// GET: url.com/file/js/file.js (routing: /file/*)
+req.params[0]   --> "js/file.js"
+
+// other stuff... 
+req.route
+req.app
+req.ips --> ["client", "proxy1", "proxy2"]  // (if "trust proxy" setting is true)
+req.baseUrl /* similar to */ app.mountpath
+req.secure /* same as */ (req.protocol === 'https')
+// req.cookies && req.signedCookies
+// req.fresh && req.stale
+// req.xhr
+
+//--------------- res ---------------//
+res --> [Stream Object] (Writable)
+
+res.end(); // (at the top) sends "empty" response (no data)
+
+res.write();		// streaming response
+	res.write('msg');				// String
+	res.write(buf); 				/* Buffer */ new Buffer('msg') // (creates Buffer from String)
+res.send('msg');	// non-streaming response
+	res.send('msg');				// String
+	res.send(buf); 					/* Buffer */ new Buffer('msg') // (creates Buffer from String)
+	res.send({});					// Object
+	res.send([]);					// Array
+
+res.json();
+
+
+res.attachment('/path/to/filename.jpg');
+// HTTP Response Header
+//		Content-Disposition: attachment; filename="filename.jpg"
+//		Content-Type: image/jpg
+res.download('/report-12345.pdf');
+res.download('/report-12345.pdf', 'report.pdf');
+res.download('/report-12345.pdf', 'report.pdf', function(err){ if (err) {/* so check res.headersSent (response may be partially-sent) */} else {/* decrement a download credit, etc. */} });
+// HTTP Response Header
+//		Content-Disposition: attachment; filename="report-12345.pdf"
+res.sendFile('filename.txt', options, function (err) {if (err) {console.log(err); res.status(err.status).end();} else {console.log('Sent:', fileName);}});
+var options = {
+	root: __dirname + '/public/',
+	dotfiles: 'deny',
+	headers: {
+		'x-timestamp': Date.now(),
+		'x-sent': true
 	}
-	var fileName = req.params.name;
-	res.sendFile(fileName, options, function (err) {
-		if (err) {
-			console.log(err);
-			res.status(err.status).end();
-		}
-		else {
-			console.log('Sent:', fileName);
-		}
-	});
+};
 
-});
+res.sendStatus(200); // send HTTP response status 200 (success)
 
+// HTTP Response Header
+res.append('field', 'value'); 			// appends field=value to 
+	res.append('Link', ['<http://localhost/>', '<http://localhost:3000/>']);
+	res.append('Set-Cookie', 'foo=bar; Path=/; HttpOnly');
+	res.append('Warning', '199 Miscellaneous warning');
 
---------------- body-parser ---------------
-var bodyParser = require('body-parser');
-var express = require('express');
-var app = express();
-
-// JSON encoding [POST/GET]
-// 		$.ajax({
-//			"contentType": "application/json", "data":{"user":"tylor"}})
-url.com/api/users + JSON encoding = 
-
-app.post('/api/users', bodyParser.json(), function (req, res) {
-  if (!req.body) return res.sendStatus(400)
-  // create user in req.body 
+res.set('Content-Type', 'text/plain');	// sets field=value
+res.set({
+	'Content-Type': 'text/plain',
+	'Content-Length': '123',
+	'ETag': '12345'
 })
 
-// URL encoding [POST/GET]
-// 		url.com/login?user=tylor&pass=P@$$  (URL encoding: "application/x-www-form-urlencoded")
-app.post('/login', bodyParser.urlencoded({extended:false}), function (req, res) {
-	if (!req.body) 
-		return res.sendStatus(400)
-	res.send('welcome, ' + req.body.user)
-})
+res.end(); // (at the bottom) closes the response
+
+
+------------------- request -------------------
+// better than http/https:
+// 		does both http/https
+// 		follows redirects 
+
+var request = require('request');
+
+// request
+request('http://url.com', callback) // GET (by default)
+request('http://url.com', function(err, res, body) {...})
+request(options, callback)
+request(options, function(err, res, body) {...})
+{ /* options */ 					/* callback */	
+	url: 'http://url.com', 			function(err, res, body) {
+	method: 'GET',						if (err) console.error(err);
+	headers: {...},						else if (res.statusCode === 200) // 200 = "OK" (HTTP success)
+	qs: {a:1, b:"y"},						 console.log(body); // (body === res.body) --> <html> from url.com
+	...									else console.error('Error Code: '+res.statusCode);
+},									}
+
+// GET 
+request(options, function(err, res, body) {...})		options = {	url:'http://url.com', method:'GET', qs:{/*data*/} }
+request
+	.get(options)										options = { url:'http://url.com', qs:{/*data*/} }
+	.on('error',    function(err) {...})
+	.on('response', function(res) {...})
+request
+	.get('http://url.com', options)						options = { qs:{/*data*/} }
+	.on('error',    function(err) {...})
+	.on('response', function(res) {...})
+request
+	.get('http://url.com')
+	.json({/*data*/})
+	.on('error',    function(err) {...})
+	.on('response', function(res) {...})
+
+// HTTP methods
+request
+	.post('http://url.com')     |    .post('http://url.com', options)     |    .post(options)
+	.get...
+	.put...
+	.del...
+	.patch...
+
+// headers
+request...
+	.headers({...})
+
+// data
+request...
+	.form({a=0})  |  options = { form:{a=0} } // Content-type: application/x-www-form-urlencoded  Body: a=0    Querystring:
+	.json({a=0})  |  options = { json:{a=0} } // Content-type: application/json                   Body: {a=0}  Querystring:
+	.qs({a=0})    |  options = { qs:  {a=0} } // Content-type:                                    Body:        Querystring: ?a=0
+	.qs({a=0}) /* same as: */ 'http://url.com/?a=0' // can mix-and-match both apporaches: .qs() & appending to url
+
+// event listeners
+request...
+	.on('error',    function(err) {...})
+	.on('response', function(res) {...})
+
+// pipe
+request...
+	.pipe(ws)
+
+rs.pipe(ws)
+
+// readstreams
+var rs = request.get('http://url.com/file.json')
+		 = fs.createReadStream('file.json')
+		 = req // request
+
+// writestreams
+var ws = request.put('http://url.com/file.json')
+		 = fs.createWriteStream('file.json')
+		 = res // response
+
+
+
+// download files
+var request = require('request');
+var fs = require('fs');
+function download(file, callback) { 		// file = {
+	var f = fs.createWriteStream(file.path)	//		path: './file.js'
+		.on('error', onerror)				//		url: 'url.com/file.js',
+		.on('finish', callback);			//	}
+	// var req = request.get(file.url)
+	// 	.on('error', onerror)
+	// 	.pipe(f);
+	try {
+		var req = request(file.url)
+			.pipe(f);
+	} catch(err) {
+		onerror(err);
+	}
+	function onerror(err){
+		fs.unlink(file.path/*, callback */); // delete file at file.path, and continue without waiting for unlink's callback
+		if (callback)
+			callback(err);
+		else
+			console.error(err);
+	}
+}
+
+// var http  = require('http' );
+// var https = require('https');
+// var fs = require('fs');
+// function download(file, callback) { // file = {url: 'http://url.com/file.js', path: './file.js'}
+// 	var http_;
+// 	var protocol = url.parse(file.url).protocol;
+// 	if      (protocol === 'http:')
+// 		http_ = http;
+// 	else if (protocol === 'https:')
+// 		http_ = https;
+// 	else
+// 		callback(new Error("Unexpected protocol '"+protocol+"' (Expected 'http:' or 'https:')"));
+// 	// what if 'url.com'? instead of 'http://url.com'?
+// 	if (http_) {
+// 		var f = fs.createWriteStream(file.path);
+// 		f.on('finish', function() {
+// 			f.close(callback);  // callback() after f [(Writable) Stream] is closed
+// 		});
+// 		var req = http_.get(file.url, function(res) {
+// 			res.pipe(f);
+// 		})
+// 		req.on('error', function(err) {
+// 			fs.unlink(file.path/*, callback */); // delete file at file.path (no callback)
+// 			if (callback) 
+// 				callback(err);
+// 		});
+// 	}
+// }
+// inspired by: http://stackoverflow.com/a/22907134/2604541
+
 
 
 -------------------- socket.io (v 1.3.5) --------------------
+/* server */									/* client */
+												<script> 
+var ns = io.of('/') = io.sockets; 			 		var skt = io.connect('/');		   /* or */ io.connect('http://url.com');
+var ns = io.of('/namespace');						var skt = io.connect('/namespace'); /* or */ io.connect('http://url.com/namespace');
+skt.emit('custom event', 'msg');					skt.on('custom event', function(msg) {});
+skt.emit('custom event',  {}  );					skt.on('custom event', function(obj) {});
+skt.on('custom event', function(msg) {});			skt.emit('custom event', 'msg');
+skt.on('custom event', function(obj) {});			skt.emit('custom event',  {}  );
+skt.on('connection', function(socket) {});			
+												</script>
 
----------- socket.io (server API) ----------
+--------------- server API ---------------
 	/* socket.io */								/* express */									
 												var express = require('express');
 												var app = express();
@@ -557,7 +791,7 @@ app.post('/login', bodyParser.urlencoded({extended:false}), function (req, res) 
 
 	// io object
 	io.sockets === io.of('/')          === io.nsps['/']
-				   io.of('/namespace') === io.nsps['/namespace']
+					 io.of('/namespace') === io.nsps['/namespace']
 	io.sockets              --> ['/' Namespace Object]
 	io.of('/namespace') 	--> ['/namespace' Namespace Object]
 	io.nsps 				--> {'/':['/' Namespace Object], '/namespace':['/namespace' Namespace Object], ... }
@@ -660,9 +894,9 @@ io.on('connection', function(skt) {
 
 
 
------------ socket.io (browser API) -----------
+------------ client (browser) API -------------
 <script src="/socket.io/socket.io.js"></script>	// socket.io serves up "socket.io.js" file (I think)
-<script> OR require('socket.io-client');
+<script> /* OR (if require is installed) */ require('socket.io-client');
 	
 
 	----- var skt --> [Socket Object] -----
@@ -729,26 +963,6 @@ io.on('connection', function(skt) {
 
 
 
------------ socket.io (server vs. browser) ----------
-/* server */									/* client */
-												<script> 
-var ns = io.of('/') = io.sockets; 			 		var skt = io.connect('/');		   /* or */ io.connect('http://url.com');
-var ns = io.of('/namespace');						var skt = io.connect('/namespace'); /* or */ io.connect('http://url.com/namespace');
-skt.emit('custom event', 'msg');					skt.on('custom event', function(msg) {});
-skt.emit('custom event',  {}  );					skt.on('custom event', function(obj) {});
-skt.on('custom event', function(msg) {});			skt.emit('custom event', 'msg');
-skt.on('custom event', function(obj) {});			skt.emit('custom event',  {}  );
-skt.on('connection', function(socket) {});			
-
-
-
-
-
-
-io.sockets
-
-
-
 
 io.on('connection', function(socket) {
 	console.log('a user connected');
@@ -774,7 +988,6 @@ http.listen(3000, function(){ console.log('listening on *:3000'); });
 		$('#messages').append($('<li>').text(msg));
 	});
 </script>
-
 
 --------------- strftime --------------- 
 // format Date & Time string
@@ -826,30 +1039,79 @@ strftime('%F %T', new Date(1307472705067));
 	Z: the time zone name, replaced with an empty string if it is not found
 	z: the time zone offset from UTC, with a leading plus sign for UTC and zones east of UTC and a minus sign for those west of UTC, hours and minutes follow each padded to 2 digits and with no delimiter between them
 
--------------------- phantomjs --------------------
+-------------------- async --------------------
+// download files asynchronously (limit: 5 at a time)
+var async = require('async');
+async.eachLimit(['file01.txt',...,'file99.txt'], 5, function(file, callback) {...}, function(err){...});
 
-var page = require('webpage').create();
-var system = require('system');
+-------------------- x-ray --------------------
+// web scraping
+var Xray = require('x-ray'); // Note: dash ('-')
+var xray = new Xray();
 
-// Route "console.log()" calls from within the Page context to the main Phantom context (i.e. current "this")
-page.onConsoleMessage = function(msg) {
-    console.log(msg);
-};
+xray(url, jQuerySelector, whatToScape).write('/path/to/filename.json')
+xray(url, jQuerySelector, whatToScape).(callback)
+xray(url, jQuerySelector, whatToScape).(function(err, result) {...})
 
-// Open http://www.homelessshelterdirectory.org/cgi-bin/id/opensearch.cgi?city=Boston&state=MA
-page.open(encodeURI("http://www.homelessshelterdirectory.org/cgi-bin/id/opensearch.cgi?city=Boston&state=MA"), function (status) {
-    // Check for page load success
-    if (status !== "success") {
-        console.log("Unable to access network");
-    } else {
-        // Execute some DOM inspection within the page context
-        page.evaluate(function() {
-            var list = document.querySelectorAll('a.marker span.tabT');
-            for (var i = 0; i < list.length; ++i) {
-                console.log((i + 1) + ": " + list[i].innerText);
-            }
-        });
-    }
-    phantom.exit();
-});
+xray('http://url.com', 'a', 
+	[{
+		//canBeAnything: 'selector',
+		innerHtml: '',
+		href: '@href', // grabs 'http://link.com' (the href value) for each <a> element
+		class: '@class' // grabs class(es) for each <a> element
+	}]	
+).write('./results.json')
+
+xray('http://url.com', 'img', 
+	[{
+		//canBeAnything: 'selector',
+		src: '@src',
+		width: '@width',
+		height: '@height'
+	}]	
+)(function(err, results) {
+	require('fs').writeFile('./results.json', JSON.stringify(results, null, '\t'))
+})
+
+xray('http://url.com', '#id', 
+	[{
+		//canBeAnything: 'selector',
+		innerHtml1: '.className', // get contents of html with class="className"
+		href: 'div:nth-child(3) a@href'
+	}]	
+)
+
+-------------------- download --------------------
+var Download = require('download');
+var download = new Download();
+
+download.dest('/path/to/download/folder')
+download.get('http://url1.com');
+download.get('http://url2.com');
+download.get('http://url3.com');
+...
+download.run();
+
+-------------------- jquery --------------------
+// server-side jQuery
+
+-------------------- coffee-script --------------------
+// shorthand javascript
+
+-------------------- underscore --------------------
+
+-------------------- backbone --------------------
+// model-view-presenter (MVP) app design
+
+//------------------ css-sprite ------------------ // now called 'sprity'
+-------------------- sprity --------------------
+// turn many images into one image + .css file
+
+--------------- mongodb --------------- 
+// NoSQL database
+
+-------------------- mongoose --------------------
+
+-------------------- sequelize --------------------
+// maps js objects to sql (relational database)
 

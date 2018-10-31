@@ -26,15 +26,20 @@ $ git config --global core.editor "subl -w" 		#$ git config --global core.editor
 #		so I can make meaningful commits (on a named branch) and offer them back to the original author (through "pull request")
 
 ########## check ssh ##########
-$ ssh -T git@github.com	# check to see if we have access
-# if not
-	$ cd ~
-	$ ssh-keygen -t rsa -C "tylor@mit.edu"	# generates ssh keys: ~/.ssh/id_rsa.pub, ~/.ssh/id_rsa (private?)
-	[ENTER]
-	[ENTER]
-	[ENTER]
-	$ cat .ssh/id_rsa.pub	# copy/paste to github.com/settings/ssh
-	# tells github that any machine with this public key is valid
+# check to see if we have access
+$ ssh -T git@github.com	
+# ssh -T git@github.mit.edu
+# if "Permission denied"
+	$ cat ~/.ssh/id_rsa.pub	
+	# if "id_rsa.pub" exist
+		# copy/paste to github.com/settings/ssh <--(tells github that any machine with this public key is valid)
+	# if "id_rsa.pub" does NOT exist, generate it
+		$ cd ~
+		$ ssh-keygen -t rsa -C "tylor@mit.edu"	# generates ssh keys: ~/.ssh/id_rsa.pub, ~/.ssh/id_rsa (private?)
+		[ENTER]
+		[ENTER]
+		[ENTER]
+		$ cat ~/.ssh/id_rsa.pub	# copy/paste to github.com/settings/ssh <--(tells github that any machine with this public key is valid)
 
 ########## sync local to remote ##########
 # if new repository
@@ -46,6 +51,8 @@ $ git remote add origin git@github.com:tylorhess/myrepo.git			# ssh (adds remote
 	#$ git remote add origin https://github.com:tylorhess/myrepo.git	# ssh
 	#$ git remote add origin https://github.com/tylorhess/myrepo.git	# https (annoying: prompts username & password every time)
 	$ cat .git/config	# see that remote was added to the .git directory (holds all the meta data for repo)
+$ git add -A # tells git to track all local files
+$ git commit -am "init commit"
 $ git push -u origin master	# pushes the "master" branch to "origin" remote (-u = "set upstream"; sets up tracking so you can `$ git pull` and `$ git push` without any extra arguments and git will know what to do)
 	# if still prompts for username and password, which means you used (incorrect) https `$ git remote add origin https://github.com/tylorhess/myrepo.git`
 	$ git remote set-url origin git@github.com:user/repo.git	# switches from using HTTPS to SSH
@@ -80,12 +87,12 @@ $ git push					# 5. commit file (remotely) = upload (push) changes to github.com
 ######### git add #########
 # only `$ git add` file(s) the first time, so they're tracked (`$ get commit -a -m "msg"` thereafter)
 # git is "opt-in" = you must explicitly add each file (elect to have each file participate in git version control)
-$ git add file.txt 					# file.txt is "staged for a commit"
+$ git add file.txt 					# add one file (file.txt is "staged for a commit")
 $ git add file1.txt file2.txt ...	# add multiple files
-$ git add .							# add all files (except files/patterns in .gitignore???)
-$ git add --ignore-removal .		# add all files, except ignore deleted files (don't remove them)
-$ git add --all .					# add all files, and pay attention to deleted files (remove them)
-$ git add -A .						# shorthand for --all
+$ git add -A|--all					# add all files (except .gitignore) and removes deleted files
+$ git add --ignore-removal			# add all files (except .gitignore) and ignores deleted files (files deleted locally remain in the repository)
+# git add .			  [DEPRECIATED] # add all files (except .gitignore) 
+
 
 $ git status						# show newly added files or previously added ("tracked") files that have been modified
 

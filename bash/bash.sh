@@ -16,8 +16,10 @@ keyboard shortcuts
 	ctrl + t	# swap two char (before cursor)
 	opt + t		# swap two words (before cursor) 
 	
-	ctrl + c	# kill running process: ^C
-	ctrl + d	# exit ("exit")
+	ctrl + d	# ^D = end of file (EOF)         = exit running process = same as: `bash$ exit`
+	ctrl + c	# ^C = interrupt signal (SIGINT) = kill running process
+	# more *nix signals: en.wikipedia.org/wiki/Unix_signal#POSIX_signals
+
 	ctrl + l	# clear screen ("clear" OR com + k)
 	<-- (left)	# back one char (ctrl + b)
 	--> (right)	# forward one char (ctrl + f)
@@ -72,9 +74,12 @@ echo $VARIABLE_NAME
 > Hello World
 
 # bash function
-function echoName {
-> echo 'tylor hess'
+function pwdString {
+> echo 'pwd'
 > }
+
+# eval
+eval $(pwdString)
 
 # set (prints all variables & functions persistent with Terminal)
 set
@@ -655,15 +660,81 @@ $ ebook-convert input.epub output.txt
 # slow bash|zsh Terminal?
 sudo rm /private/var/log/asl/*.asl 	# removes all the .asl log files
 
+# homebrew
+brew upgrade
+brew update 	# updates homebrew and packages
+brew doctor 	# helps diagnose/resolve problems with homebrew
+brew install <package> 
+brew update & brew install <package> # run `brew update` before installing a package
+brew uninstall <package>
+brew uninstall --ignore-dependencies $(brew list) # uninstall all
+brew info <package> # prints install options 
+
+# ntfs-3g
+brew cask install osxfuse # install osxfuse (alternatively: https://osxfuse.github.io/)
+# check: System Preferences > FUSE
+brew install ntfs-3g
+sudo mkdir /Volumes/NTFS
+diskutil list # --> /dev/disk#s#
+sudo /usr/local/bin/ntfs-3g /dev/disk#s# /Volumes/NTFS -olocal -oallow_other
+
+# mac (os x) diskutil
+# mount external hard drive
+diskutil list # -->  /dev/disk#     AND     /dev/disk#s#
+diskutil unmountDisk /dev/disk# 			diskutil unmount /dev/disk#s#
+diskutil eject /dev/disk# 					
+diskutil mountDisk /dev/disk#				diskutil mount /dev/disk#s#
+diskutil mountDisk readOnly /dev/disk#		diskutil mount readOnly /dev/disk#s#
+
+# ffmpeg
+ffmpeg -i  <input>   <output>
+ffmpeg -i input.mp4 output.avi 	# convert video formats
+	-i <input>
+# crop video (or images)
+ffmpeg -i <input> -vf "crop=w:h:x:y" <output>
+	-vf 				= video filter
+	-vf "crop=w:h:x:y"	= crop
+# extract images from a video
+ffmpeg -i <video> -r <rate> -s <width>x<height> -f image2 img%03d.jpeg
+ffmpeg -i <video>     ...    -pattern_type glob    ...    'img*.jpeg'
+	-i <video> 			= input video
+	-r <rate> 			= extract images at <rate> (frames per second)
+	-s <width>x<height> = scale output (image size)
+	-f image2 			= (after `-i`) video --> images
+# convert image sequence to video
+ffmpeg -f image2 -framerate <rate> -i img%03d.jpeg -s <width>x<height> -pix_fmt yuv420p <video>
+ffmpeg ... -pattern_type glob ...  -i 'img*.jpeg'                  ...                  <video>
+	-f image2 ... -i 	= (before `-i`) images --> video
+	-framerate <rate> 	= insert images at <rate> images per second (e.g. <rate> = `1/5` >>  each image displayed 5 seconds)
+	-i <images> 		= input images
+	-s <width>x<height> = scale output (video size)
+	-r <rate> 			= output framerate (fps) ... defaults to -framerate <rate>, if excluded
+	-c:v <encoder>		= output video encoder ... (e.g. <encoder> = libx264)
+	-pix_fmt yuv420p 	= yuv is color space that takes human perception into account
+	<video> 			= output video
 
 
 
+# convert: .m4a --> .amr (audio files)
+brew info ffmpeg | grep amr # find an AMR Homebrew install option (e.g. `--with-opencore-amr`)
+brew install ffmpeg --with-opencore-amr # install ffmpeg with AMR install option
+ffmpeg -codecs | grep amr # look for "configuration: ... --enable-libopencore-amrnb --enable-libopencore-amrwb ... "
+ffmpeg -i audio.m4a -ar 8000 -ab 12.2k -ac 1 audio.amr # run ffmpeg
+	-ar 8000  # audio sampling rate (in Hz)			Note: AMR only supports sample rate: 8000Hz 
+	-ab 12.2k # audio bit rate (in kbit/s)			Note: AMR only supports bit rates: 4.75k, 5.15k, 5.9k, 6.7k, 7.4k, 7.95k, 10.2k, 12.2k 
+    -ac 1     # stereo --> mono
 
+ffmpeg -i stereo.flac -ac 1 mono.flac # downmixes 2 stereo streams into 1 mono stream (out-of-phase stereo cancels out)
+	-ac 1     # stereo --> mono
 
+for filename in *.m4a; do
+  ffmpeg -i "$filename" -ar 8000 -ab 12.2k -ac 1 "$filename.amr"
+done
 
-
-
-
+for file in *.m4a; do 
+  filename=`echo $file | cut -d'.' -f1`; # remove file extension
+  ffmpeg -i "$filename.m4a" -ar 8000 -ab 12.2k -ac 1 "$filename.amr";
+done
 
 
 
@@ -757,7 +828,10 @@ mount -t smbfs //username:password@127.0.0.2/sktech/ /Volumes/sktech/
 # change mode to allow mnt_cmd to execute
 chmod u+x mnt_cmd
 
-
+# clear duplicate entries in "Open With" in OS X >=10.5  (https://discussions.apple.com/thread/4250905)
+/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -kill -r -domain local -domain system -domain user 
+#/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user
+killall Finder;
 
 
 
@@ -844,7 +918,7 @@ Restart apache: sudo apachectl restart and check in the phpinfo that xdebug is n
 
 # PEAR
 
-We need PEAR! For some reason, it's not set up ready to on Lion, but the install phar file is here, so we just need to run it.
+# We need PEAR! For some reason, it's not set up ready to on Lion, but the install phar file is here, so we just need to run it.
 
 cd /usr/lib/php
 sudo php install-pear-nozlib.phar
@@ -856,7 +930,7 @@ sudo pear upgrade-all
 
 # PHPUnit and friends
 
-I assume that everyone needs these…
+# I assume that everyone needs these…
 
 sudo pear channel-discover pear.phpunit.de
 sudo pear channel-discover components.ez.no
@@ -867,29 +941,29 @@ sudo pear install PHP_CodeSniffer
 
 # PECL OAuth
 
-A couple of projects I work on use the PECL OAuth component:
+# A couple of projects I work on use the PECL OAuth component:
 
-Ensure you have installed Xcode from the Mac App Store
-Download the latest PCRE source code from http://sourceforge.net/projects/pcre/files/pcre/ and unzip to a folder on your desktop
+# Ensure you have installed Xcode from the Mac App Store
+# Download the latest PCRE source code from http://sourceforge.net/projects/pcre/files/pcre/ and unzip to a folder on your desktop
 cd ~/Desktop/pcre-8.12
 ./configure
 sudo cp pcre.h /usr/include/
-Remove the pcre folder on your desktop as you don't need it any more
+# Remove the pcre folder on your desktop as you don't need it any more
 sudo pecl install oauth
-Edit/etc/php.ini add these lines to the end of the file:
+#Edit/etc/php.ini add these lines to the end of the file:
 [oauth]
 extension="/usr/lib/php/extensions/no-debug-non-zts-20090626/oauth.so"
-Restart apache: sudo apachectl restart and check in the phpinfo that OAuth is now loaded.
+# Restart apache: sudo apachectl restart and check in the phpinfo that OAuth is now loaded.
 
 # mcrypt
 
-This is useful! Follow the installation details by Michale Gracie here: http://michaelgracie.com/2011/07/21/plugging-mcrypt-into-php-on-mac-os-x-lion-10-7/)
+# This is useful! Follow the installation details by Michale Gracie here: http://michaelgracie.com/2011/07/21/plugging-mcrypt-into-php-on-mac-os-x-lion-10-7/)
 
-It all works on this machine, anyway :)
+# It all works on this machine, anyway :)
 
 # Other options
 
-If you'd rather use a packaged version, then these are two alternatives:
+# If you'd rather use a packaged version, then these are two alternatives:
 
-PHP 5.3 for OS X as binary package
-Zend Server CE
+# PHP 5.3 for OS X as binary package
+# Zend Server CE

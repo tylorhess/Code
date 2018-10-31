@@ -1,0 +1,349 @@
+<!-- ──────────────────── Simplified HTML5 ──────────────────── -->
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8"> <!-- always first line (tells browser how to parse .html doc as string) -->
+	
+	<link rel="stylesheet" href="css/styles.css?v=1.0">	<!-- css = as HIGH as possible in <head> -->
+	<style type="text/css"></style>						<!-- css = as HIGH as possible in <head> -->
+
+	<!--[if lt IE 9]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<div></div>	<!-- normal html -->
+
+	<script src="js/scripts.js"></script>     <!-- js = as LOW as possible in <body> -->
+	<script></script>					      <!-- js = as LOW as possible in <body> -->
+</body>
+</html>
+
+<!-- ──────────────────── Basic HTML5 Template ──────────────────── -->
+<!doctype html> <!-- HTML5 DOCTYPE -->
+
+<html lang="en">
+<head>
+	<meta charset="utf-8"> <!-- always first line (tells browser how to parse .html doc as string) -->
+
+	<title>Title</title>
+	<meta name="description" content="description">
+	<meta name="author" content="Tylor">
+
+	<!-- ──────────────────── CSS ────────────────────
+		place as high in the <head> as possible -->
+	<link rel="stylesheet" href="css/styles.css?v=1.0">
+	<style type="text/css"></style>
+
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<!-- place html here -->
+
+	<!-- ──────────────────── javascript ────────────────────
+		place in the <body> (as low as possible for faster load time)
+		minify & gzip .js files
+		document.write(); not recommended -->
+	<script src="js/scripts.js"></script>     <!-- Best Practice: separate html, css, js files (because you can run validation and compression tools on a file) -->
+	<script></script>					      <!-- Recommended -->
+	<!-- DON'T USE: <script type="text/javascript"></script> especially if both "type" & "src" used, file type comes from server, ignores html "type" attribute -->
+</body>
+</html>
+<!-- ──────────────────── End of HTML5 Template ──────────────────── -->
+
+
+<!-- ──────────────────── id vs. name ──────────────────── -->
+<div id="id"></div>	<!-- uniquely identifies html element -->
+<form action="file.php" method="post">	<!-- default: action="#" method="get" -->
+	<input id="id1" name="name1">		<!-- php: $_POST["name1"]; -->
+	<textarea id="id2" name="name2">
+	<select id="id3" name="name3">
+</form>
+
+
+<!-- ──────────────────── SVG ──────────────────── -->
+<!-- good tutorial: tutorials.jenkov.com/svg/index.html -->
+
+<!-- (default) 1 screen pixel = 1 svg pixel -->
+<svg width="200" height="200" viewBox="0 0 100 100">
+<!-- 200x200 screen pixels = 100x100 user units -->
+	
+	<circle id="id" class="class"
+		cx="25" cy="75" 
+		r="20"
+		fill="transparent" 
+		stroke="red" stroke-width="5" />
+		<!-- center: (cx, cy) -->
+
+	<ellipse id="id" class="class" 
+		cx="75" cy="75" 
+		rx="20" ry="5" 
+		fill="transparent"
+		stroke="red" stroke-width="5" />
+		<!-- center: (cx, cy) -->
+		<!-- major or minor axis: rx/ry -->
+
+	<rect id="id" class="class"
+		x="0" y="0" 
+		width="100" height="100"
+		fill="blue"
+		stroke="red" stroke-width="5px"
+		rx="8" ry="8" /> 
+		<!-- rounded corner x/y radius: rx/ry -->
+	
+	<!-- automatically connects endpoints -->
+	<polygon id="id" class="class" 
+		points="50 160 55 180 70 180 60 190 65 205 50 195 35 205 40 190 30 180 45 180"
+		points="50 160,55 180,70 180,60 190,65 205,50 195,35 205,40 190,30 180,45 180" (same)
+		fill="transparent" 
+		stroke="green" stroke-width="5" />
+		<!-- points: [ (50,160), (55,180), (70,180), (60,190), (65,205), (50,195), (35,205), (40,190), (30,180), (45,180) ] -->
+
+	<!-- does not connect endpoints -->
+	<polyline id="id" class="class" 
+		points="60 110 65 120 70 115 75 130 80 125 85 140 90 135 95 150 100 145"
+		points="60 110,65 120,70 115,75 130,80 125,85 140,90 135,95 150,100 145" (same)
+		stroke="orange" stroke-width="5" />
+		<!-- points: [ (60,110), (65,120), (70,115), (75,130), (80,125), (85,140), (90,135), (95,150), (100,145) ] -->
+		<!-- no fill? -->
+
+	<line id="id" class="class" 
+		x1="10" y1="110" 
+		x2="50" y2="150" 
+		stroke="orange" stroke-width="5" />
+		<!-- no fill? -->
+
+	<path id="id" class="class" 
+		d="M20,230 Q40,205 50,230 T90,230" 
+		fill="none" 
+		stroke="blue" stroke-width="5" />
+		<!-- list of commands (use [SPACE] to separate commands): -->
+			<!-- M200,230 	"Move to" 		(200,230) 		start/begin	-->
+			<!-- L400,240	"Line to" 		(400,240)		straight line -->
+			<!-- H100		"Horiz line to" (100,...) 		straight line -->
+			<!-- V100		"Vert line to"  (...,100) 		straight line -->
+			<!-- A30,40 0 1,1 50,60 
+					ellipse major or minor x axis: 30
+					ellipse major or minor y axis: 40
+					x-axis rotation: 0
+					larger/smaller arc: 1/0
+					clockwise/counterclockwise: 1/0
+					"Arc (ellipse) to" (50,60)
+			-->
+			<!-- Q60,70 80,90
+					"Quadratic Bézier curve to" (80,90)
+					control point: (60,70) // pulls curve toward it (the further away, the stronger the pull)
+			-->
+			<!-- C40,50 60,70 80,90
+					"Cubic Bézier curve to" (80,90) // same as quadratic, except 2 control points instead of 1
+					control points: (40,50) (60,70) // pulls curve toward it (the further away, the stronger the pull)
+			-->
+			<!-- Z			"close path" 					straight line end-->
+			<!-- lowercase letters do the same thing as uppercase 
+					except, they use relative ±x/±y (relative to last pen point)
+			-->
+
+	<text id="id" class="class" 
+		x="10" y="10" />
+		<!-- x = text anchor (left|center|right, depending on: style="text-anchor:start|middle|end") -->
+		<!-- y = text underline -->
+		<!-- character = binary representation of a letter -->
+		<!-- glyph     = visual (svg) representation of a letter/character -->
+		<!-- font      = collection of glyphs -->
+		<!-- lots of styles -->
+
+	<tspan />    <!-- mulitple lines or bullets -->
+	<tref />     <!-- define once, reference many times -->
+	<textpath /> <!-- draw text along a path -->
+
+	<image id="id" class="class"
+		xlink:href="firefox.jpg"   					(required) 
+		height="50px" width="50px" 					(required, +"px")
+		x="0" y="0" 								(optional, no px)
+		/>
+		<!-- must use tranform="scale(2,2)" to stretch image (x2 length, x4 area) -->
+
+	<!-- AngularJS SVG <image> -->
+	<image id="id" class="class"
+		ng-attr-xlink:href="{{$scope.href}}" 		(required, requires full url:"http://url.com/...")
+		xlink:href="" 								(required after ng-attr-xlink:href)
+		ng-attr-width ="{{$scope.width +'px'}}"		(required, requires:"px")
+		ng-attr-height="{{$scope.height+'px'}}" 	(required, requires:"px")
+		ng-attr-x="{{$scope.x}}" 
+		ng-attr-y="{{$scope.y}}" 
+		/>
+
+	<!-- WARNING: NOT WIDELY SUPPORTED  -->
+	<!-- mask = image = "soft"/opacity-gradient/8-bit mask --> <!-- 8-bit 1-channel (grayscale), NOT: 8-bit 3-channel (RGB) -->
+		<!-- apply mask (image) to svg element -->
+		<!-- css: mask-type: luminance (default) -->
+			<!-- empty pixels in mask make underlying svg pixls fully transparent (0% opacity) -->
+			<!-- black pixels (#000) in mask = applies 0% opacity (100% transpar'cy) to underlying svg pixels (does nothing, same as empty mask) -->
+			<!-- white pixels (#FFF) in mask = applies 100% opacity (0% transpar'cy) to underlying svg pixels (entirely reveals svg pixels) -->
+			<!-- gray    (#000-#FFF) in mask = applies 0-100% opacity to underlying svg pixels -->
+		<!-- css: mask-type: alpha -->
+	<defs>
+		<mask id="mask_id" x="0" y="0" width="60" height="60" >
+			<rect x="0" y= "0" width="20" height="50" style="stroke:none; fill: #FFFFFF"/> 
+			<rect x="0" y="20" width="20" height="50" style="stroke:none; fill: #CCCCCC"/> 
+			<rect x="0" y="40" width="20" height="50" style="stroke:none; fill: #000000"/> 
+		</mask>
+	</defs>
+	<rect x="0" y="0" width="60" height="60" style="mask: url(#mask_id); stroke: none; fill: #0000FF"/>
+	<!-- rect's top    20px: full blue   = 100% opacity (  0% transparent) because white (#FFF) mask -->
+	<!-- rect's middle 20px: light blue  =  80% opacity ( 20% transparent) because gray  (#CCC) mask -->
+	<!-- rect's bottom 20px: transparent =   0% opacity (100% transparent) because black (#000) mask -->
+
+
+	<!-- WARNING: NOT WIDELY SUPPORTED  -->
+	<!-- clipping = path = "hard"/binary/boolean/1-bit mask (no opacity gradient) -->
+		<!-- the parts inside the path (shape fill) are visible -->
+		<!-- the parts outside the path are hidden -->
+	<defs>
+		<clipPath id="clipPath1">
+			<rect x="15" y="15" width="40" height="40" />
+		</clipPath>
+		<clipPath id="clipPath2">
+			<path d="M10,10 q60,60 100,0 q50,50 50,50 l40,0 l-40,40 l-100,-20"/>
+		</clipPath>
+	</defs>
+	<circle cx="25" cy="25" r="20" style="clip-path: url(#clipPath1); ..." />
+
+
+
+
+</svg>
+<script>
+	rect.style.x = 0;
+	rect.style.y = 0;
+	rect.style.width  = 100;
+	rect.style.height = 100;
+	rect.style.fill   = "blue";
+	rect.style.stroke = "red";
+	//...
+
+</script>>
+
+<!-- ──────────────────── canvas ──────────────────── -->
+<!-- like an <img> + drawing -->
+<canvas id="canvas"></canvas> <!-- same as: --> <canvas id="canvas" width="300" height="150"></canvas> <!-- default width/height -->
+<script type="text/javascript">
+	
+	// 2D Context
+	var canvas = $('#canvas');
+	if (canvas.getContext)
+		{var ctx = canvas.getContext('2d');}
+	else
+		{/* browser doesn't support <canvas> */}
+	
+	// <canvas> (html element)
+	ctx.canvas --> $('#canvas');
+	
+	// style
+	ctx.fillStyle   = "white"|"#FFFFFF"|"rgb( 255, 255, 255)"|"rgba(255, 255, 255, 0.5)"; // a = alpha = transparency
+	ctx.strokeStyle = "white"|"#FFFFFF"|"rgb( 255, 255, 255)"|"rgba(255, 255, 255, 0.5)"; // a = alpha = transparency
+	 ctx.lineWidth  = 1.0; // (default)
+	 ctx.lineCap = ("butt")|"round"|"square";
+	 ctx.lineJoin = ("miter")|"bevel"|"round"; // miter = sharp; bevel = cut-off; round = rounded
+	 ctx.miterLimit = 10.0; // (default) miterLimit = max the sharp edges can jut out 
+	 ctx.setLineDash([solid, trans/*, solid, trans, ... */]); // length of solid/transparent segments
+	 ctx.getLineDash() --> 5, 10/*, 20, 15, ... */]
+	 ctx.lineDashOffset = 0.0; // (default) lineDashOffset = where to start (think: marching ants)
+	ctx.globalAlpha = 0.9; // alpha = transparency
+
+	// text
+	ctx.font = "48px serif";
+	ctx.fillText(  "text", x, y); 	// insert text (normal)
+	ctx.strokeText("text", x, y);	// insert text (outline)
+	ctx.measureText("text") --> [TextMetrics Object]
+		var textMet = ctx.measureText("text");
+		textMet.width --> 16
+
+	// rectangle
+	ctx.fillRect(   x, y, width, height); 	// draw rectangle (solid)
+	ctx.strokeRect( x, y, width, height);	// draw rectangle (outline)
+	ctx.clearRect(  x, y, width, height);	// erase (make transparent) rectangle
+
+	// lines (straight) to draw triangle
+	ctx.beginPath();
+	 ctx.moveTo(x0, y0);	// start point
+	 ctx.lineTo(x1, y1);	// line from (x0,y0) to (x1,y1)
+	 ctx.lineTo(x2, y2);	// line from (x1,y1) to (x2,y2)
+	ctx.closePath();	// connects start & end points
+	ctx.fill();			// draw triangle (solid) 
+	ctx.stroke();		// draw triangle (outline)
+	
+	
+	// arcs
+	ctx.beginPath();
+	 ctx.arc(x, y, r, t1, t2, ccw); 		// (x,y) = center; r = radius; t1/t2 = start/end theta; ccw = counter-clockwise = true|false
+	 //ctx.moveTo(xa,ya);					// removes the line segment connecting the start/end of next/previous arc
+	 ctx.arcTo(x1, y1, x2, y2, radius);		// circle between (x1,y1) and (x2,y2)?
+	 //ctx.moveTo(xb,yb);					// removes the line segment connecting the start/end of next/previous arc
+	 ctx.quadraticCurveTo(cpx, cpy, x, y);	// https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes
+	 //ctx.moveTo(xc,yc);					// removes the line segment connecting the start/end of next/previous arc
+	 ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y); // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes
+	ctx.closePath();	// connects start & end points
+	ctx.fill();			// draw triangle (solid) 
+	ctx.stroke();		// draw triangle (outline)
+
+	// gradients
+	// patterns (thinking css background repeat)
+	// shadows
+
+	// images
+	<img id="im" src="image.jpg"> /* OR */ var img = new Image(); img.src = 'image.jpg';
+	var img = $('#im');
+	ctx.drawImage(img, x, y, width, height);
+	// crop and scale image
+	ctx.drawImage(img, xc, yc, widthc, heightc, x, y, widths, heights); // (xc, yc, widthc, heightc) crops original image; (x, y, widths, heights) places & scales cropped image
+
+	// rotate/translate canvas origin
+	ctx.translate(   x,  y); // move origin x to the left, and y up
+	ctx.translate(left, up);
+	ctx.rotate(angle);
+
+
+	// [Path2D Object]
+	var path =  new Path2D();      // empty [Path2D Object]
+				new Path2D(path);  // copy another [Path2D Object]
+				new Path2D(svg.d); // [Path2D Object] from SVG path data
+
+	var shape = new Path2D();
+	 shape.addPath(path);
+	 //shape.moveTo(/* next shape's start point */);
+	 
+	 //shape.moveTo(/* next shape's start point */);
+	 shape.lineTo(...);
+	 shape.arc(...);
+	 shape.arcTo(...);
+	 shape.quad...
+	 shape.bez...
+
+	 shape.rect(x, y, width, height);
+	 shape.ellipse(x, y, rX, rY, rot, t1, t2, ccw); // rot = degrees to rotate shape
+
+	 shape.closePath();
+	ctx.fill(shape);
+	ctx.stroke(shape);
+
+	// clipping = "hard"/binary/boolean/1-bit mask (no opacity gradient)
+
+	// compositing = developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Compositing
+
+
+</script>
+
+
+
+
+
+
+
+
+
+

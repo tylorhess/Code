@@ -9,7 +9,7 @@ function data = loadubjson(fname,varargin)
 % authors:Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
 % created on 2013/08/01
 %
-% $Id: loadubjson.m 460 2015-01-03 00:30:45Z fangq $
+% $Id$
 %
 % input:
 %      fname: input file name, if fname contains "{}" or "[]", fname
@@ -26,6 +26,11 @@ function data = loadubjson(fname,varargin)
 %                         in the UBJSON input data. B - Big-Endian format for 
 %                         integers (as required in the UBJSON specification); 
 %                         L - input integer fields are in Little-Endian order.
+%           opt.NameIsString [0|1]: for UBJSON Specification Draft 8 or 
+%                         earlier versions (JSONLab 1.0 final or earlier), 
+%                         the "name" tag is treated as a string. To load 
+%                         these UBJSON data, you need to manually set this 
+%                         flag to 1.
 %
 % output:
 %      dat: a cell array, where {...} blocks are converted into cell arrays,
@@ -89,100 +94,6 @@ if(jsoncount==1 && iscell(data))
     data=data{1};
 end
 
-if(~isempty(data))
-      if(isstruct(data)) % data can be a struct array
-          data=jstruct2array(data);
-      elseif(iscell(data))
-          data=jcell2array(data);
-      end
-end
-
-
-%%
-function newdata=parse_collection(id,data,obj)
-
-if(jsoncount>0 && exist('data','var')) 
-    if(~iscell(data))
-       newdata=cell(1);
-       newdata{1}=data;
-       data=newdata;
-    end
-end
-
-%%
-function newdata=jcell2array(data)
-len=length(data);
-newdata=data;
-for i=1:len
-      if(isstruct(data{i}))
-          newdata{i}=jstruct2array(data{i});
-      elseif(iscell(data{i}))
-          newdata{i}=jcell2array(data{i});
-      end
-end
-
-%%-------------------------------------------------------------------------
-function newdata=jstruct2array(data)
-fn=fieldnames(data);
-newdata=data;
-len=length(data);
-for i=1:length(fn) % depth-first
-    for j=1:len
-        if(isstruct(getfield(data(j),fn{i})))
-            newdata(j)=setfield(newdata(j),fn{i},jstruct2array(getfield(data(j),fn{i})));
-        end
-    end
-end
-if(~isempty(strmatch('x0x5F_ArrayType_',fn)) && ~isempty(strmatch('x0x5F_ArrayData_',fn)))
-  newdata=cell(len,1);
-  for j=1:len
-    ndata=cast(data(j).x0x5F_ArrayData_,data(j).x0x5F_ArrayType_);
-    iscpx=0;
-    if(~isempty(strmatch('x0x5F_ArrayIsComplex_',fn)))
-        if(data(j).x0x5F_ArrayIsComplex_)
-           iscpx=1;
-        end
-    end
-    if(~isempty(strmatch('x0x5F_ArrayIsSparse_',fn)))
-        if(data(j).x0x5F_ArrayIsSparse_)
-            if(~isempty(strmatch('x0x5F_ArraySize_',fn)))
-                dim=double(data(j).x0x5F_ArraySize_);
-                if(iscpx && size(ndata,2)==4-any(dim==1))
-                    ndata(:,end-1)=complex(ndata(:,end-1),ndata(:,end));
-                end
-                if isempty(ndata)
-                    % All-zeros sparse
-                    ndata=sparse(dim(1),prod(dim(2:end)));
-                elseif dim(1)==1
-                    % Sparse row vector
-                    ndata=sparse(1,ndata(:,1),ndata(:,2),dim(1),prod(dim(2:end)));
-                elseif dim(2)==1
-                    % Sparse column vector
-                    ndata=sparse(ndata(:,1),1,ndata(:,2),dim(1),prod(dim(2:end)));
-                else
-                    % Generic sparse array.
-                    ndata=sparse(ndata(:,1),ndata(:,2),ndata(:,3),dim(1),prod(dim(2:end)));
-                end
-            else
-                if(iscpx && size(ndata,2)==4)
-                    ndata(:,3)=complex(ndata(:,3),ndata(:,4));
-                end
-                ndata=sparse(ndata(:,1),ndata(:,2),ndata(:,3));
-            end
-        end
-    elseif(~isempty(strmatch('x0x5F_ArraySize_',fn)))
-        if(iscpx && size(ndata,2)==2)
-             ndata=complex(ndata(:,1),ndata(:,2));
-        end
-        ndata=reshape(ndata(:),data(j).x0x5F_ArraySize_);
-    end
-    newdata{j}=ndata;
-  end
-  if(len==1)
-      newdata=newdata{1};
-  end
-end
-
 %%-------------------------------------------------------------------------
 function object = parse_object(varargin)
     parse_char('{');
@@ -200,14 +111,18 @@ function object = parse_object(varargin)
     if next_char ~= '}'
         num=0;
         while 1
-            str = parseStr(varargin{:});
+            if(jsonopt('NameIsString',0,varargin{:}))
+                str = parseStr(varargin{:});
+            else
+                str = parse_name(varargin{:});
+            end
             if isempty(str)
                 error_pos('Name of value at position %d cannot be empty');
             end
             %parse_char(':');
             val = parse_value(varargin{:});
             num=num+1;
-            eval( sprintf( 'object.%s  = val;', valid_field(str) ) );
+            object.(valid_field(str))=val;
             if next_char == '}' || (count>=0 && num>=count)
                 break;
             end
@@ -216,6 +131,9 @@ function object = parse_object(varargin)
     end
     if(count==-1)
         parse_char('}');
+    end
+    if(isstruct(object))
+        object=struct2jdata(object);
     end
 
 %%-------------------------------------------------------------------------
@@ -232,7 +150,7 @@ end
 %%-------------------------------------------------------------------------
 
 
-function [data adv]=parse_block(type,count,varargin)
+function [data, adv]=parse_block(type,count,varargin)
 global pos inStr isoct fileendian systemendian
 [cid,len]=elem_info(type);
 datastr=inStr(pos:pos+len*count-1);
@@ -252,7 +170,7 @@ adv=double(len*count);
 
 
 function object = parse_array(varargin) % JSON array is written in row-major order
-global pos inStr isoct
+global pos inStr
     parse_char('[');
     object = cell(0, 1);
     dim=[];
@@ -273,7 +191,7 @@ global pos inStr isoct
     end
     if(~isempty(type))
         if(count>=0)
-            [object adv]=parse_block(type,count,varargin{:});
+            [object, adv]=parse_block(type,count,varargin{:});
             if(~isempty(dim))
                 object=reshape(object,dim);
             end
@@ -283,7 +201,7 @@ global pos inStr isoct
             endpos=matching_bracket(inStr,pos);
             [cid,len]=elem_info(type);
             count=(endpos-pos)/len;
-            [object adv]=parse_block(type,count,varargin{:});
+            [object, adv]=parse_block(type,count,varargin{:});
             pos=pos+adv;
             parse_char(']');
             return;
@@ -305,7 +223,7 @@ global pos inStr isoct
         object=cell2mat(object')';
         if(iscell(oldobj) && isstruct(object) && numel(object)>1 && jsonopt('SimplifyCellArray',1,varargin{:})==0)
             object=oldobj;
-        elseif(size(object,1)>1 && ndims(object)==2)
+        elseif(size(object,1)>1 && ismatrix(object))
             object=object';
         end
       catch
@@ -347,8 +265,19 @@ function skip_whitespace
     end
 
 %%-------------------------------------------------------------------------
+function str = parse_name(varargin)
+    global pos inStr
+    bytelen=double(parse_number());
+    if(length(inStr)>=pos+bytelen-1)
+        str=inStr(pos:pos+bytelen-1);
+        pos=pos+bytelen;
+    else
+        error_pos('End of file while expecting end of name');
+    end
+%%-------------------------------------------------------------------------
+
 function str = parseStr(varargin)
-    global pos inStr esc index_esc len_esc
+    global pos inStr
  % len, ns = length(inStr), keyboard
     type=inStr(pos);
     if type ~= 'S' && type ~= 'C' && type ~= 'H'
@@ -372,7 +301,7 @@ function str = parseStr(varargin)
 %%-------------------------------------------------------------------------
 
 function num = parse_number(varargin)
-    global pos inStr len isoct fileendian systemendian
+    global pos inStr isoct fileendian systemendian
     id=strfind('iUIlLdD',inStr(pos));
     if(isempty(id))
         error_pos('expecting a number at position %d');
@@ -394,8 +323,7 @@ function num = parse_number(varargin)
 %%-------------------------------------------------------------------------
 
 function val = parse_value(varargin)
-    global pos inStr len
-    true = 1; false = 0;
+    global pos inStr
 
     switch(inStr(pos))
         case {'S','C','H'}
@@ -406,13 +334,6 @@ function val = parse_value(varargin)
             return;
         case '{'
             val = parse_object(varargin{:});
-            if isstruct(val)
-                if(~isempty(strmatch('x0x5F_ArrayType_',fieldnames(val), 'exact')))
-                    val=jstruct2array(val);
-                end
-            elseif isempty(val)
-                val = struct;
-            end
             return;
         case {'i','U','I','l','L','d','D'}
             val = parse_number(varargin{:});
@@ -459,12 +380,16 @@ global isoct
             str=sprintf('x0x%X_%s',char(str(1)),str(2:end));
         end
     end
-    if(isempty(regexp(str,'[^0-9A-Za-z_]', 'once' ))) return;  end
+    if(isempty(regexp(str,'[^0-9A-Za-z_]', 'once' )))
+        return;
+    end
     if(~isoct)
         str=regexprep(str,'([^0-9A-Za-z_])','_0x${sprintf(''%X'',unicode2native($1))}_');
     else
         pos=regexp(str,'[^0-9A-Za-z_]');
-        if(isempty(pos)) return; end
+        if(isempty(pos))
+            return;
+        end
         str0=str;
         pos0=[0 pos(:)' length(str)];
         str='';
@@ -491,7 +416,7 @@ while(pos<len)
 end
 error('unmatched quotation mark');
 %%-------------------------------------------------------------------------
-function [endpos e1l e1r maxlevel] = matching_bracket(str,pos)
+function [endpos, e1l, e1r, maxlevel] = matching_bracket(str,pos)
 global arraytoken
 level=1;
 maxlevel=level;
@@ -506,14 +431,18 @@ while(pos<=len)
     c=tokens(pos);
     if(c==']')
         level=level-1;
-        if(isempty(e1r)) e1r=bpos(pos); end
+        if(isempty(e1r))
+            e1r=bpos(pos);
+        end
         if(level==0)
             endpos=bpos(pos);
             return
         end
     end
     if(c=='[')
-        if(isempty(e1l)) e1l=bpos(pos); end
+        if(isempty(e1l))
+            e1l=bpos(pos);
+        end
         level=level+1;
         maxlevel=max(maxlevel,level);
     end

@@ -1,0 +1,82 @@
+<html ng-app="miscApp">
+	<head>
+		<meta charset="utf-8">
+		<title>Angular.js Template</title>
+		<!-- css -->
+		<style type="text/css">
+
+		</style>
+		
+		<!-- javascript -->
+		<!--[if lt IE 9]>
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<![endif]-->
+		<!--[if gte IE 9]><!-->
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<!--<![endif]-->
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular-route.min.js"></script>
+		<script src="https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
+		<script src="https://cdn.firebase.com/libs/angularfire/1.0.0/angularfire.min.js"></script>
+		<script>
+			var miscApp = angular.module("miscApp", ["firebase"]);
+			miscApp.controller("MiscCtrl", ["$scope", "$firebaseArray",
+				function($scope, $firebaseArray) {
+					// Firebase
+					var ref = new Firebase("https://smu0etiuga9.firebaseio-demo.com/");
+					$scope.messages = $firebaseArray(ref);
+					$scope.msgFrom = "Anonymous";
+
+					$scope.addMessage = function(msgBody) {
+						$scope.messages.$add({
+							from: $scope.msgFrom,
+							body: $scope.msgBody
+						});
+						$scope.msgBody = "";
+					};
+
+					$scope.graph = {
+						width: 1000,
+						height: 1000
+					};
+
+					$scope.circles = [
+						{x:10, y:10, r:10},
+						{x:99, y:99, r:99}
+					];
+				}
+			]);
+		</script>
+	</head>
+	<body ng-controller="MiscCtrl">
+		<!-- <pre>{{ messages | json }}</pre><hr> -->
+		<ul>
+			<li ng-repeat="msg in messages">
+				<strong>{{ msg.from }}:</strong> {{ msg.body }} <button ng-click="messages.$remove(msg)">x</button>
+			</li>
+		</ul>
+		<input ng-model="msgFrom" type="text"/>: <input ng-model="msgBody" type="text"/><button ng-click="addMessage(msgBody)">+</button>
+
+		<br><br><hr><br>
+		
+		Name:<input ng-model="name" type="text"/><button ng-click="name = undefined">x</button><br />
+		One-time name: {{::name}}<br/>
+		Two-way name: {{name}}<br/>
+		<div ng-class="{{name}}"></div>
+		<div class="{{name}}"></div>
+		
+		<br><hr><br>
+		
+		height: <input ng-model="graph.height" type="text">, width: <input ng-model="graph.width" type="text"><br>
+		<svg ng-attr-height="{{graph.height}}" ng-attr-width="{{graph.width}}" style="border: 1px solid red">
+			<circle ng-repeat="circle in circles" 
+				ng-attr-cx="{{circle.x}}" 
+				ng-attr-cy="{{circle.y}}" 
+				ng-attr-r= "{{circle.r}}">
+			</circle>
+		</svg> 
+
+		
+		
+	</body>
+</html>

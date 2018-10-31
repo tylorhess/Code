@@ -12,6 +12,7 @@ command line one ...
 line one continued;
 cd ~/Code/matlab 	% change MATLAB Current Folder (change directory)
 cd .. 				% parent folder
+cmd+. 	% force quit matlab
 
 % execute Matlab from command line (terminal)
 % http://www.mathworks.com/help/matlab/ref/matlablinux.html
@@ -62,10 +63,13 @@ fontSize 20
 
 % relational/boolean operators 
 > < >= <= % greater/less than (or equal to)
-a == b	% boolean equals (real and imaginary)
-a ~= b 	% boolean NOT equals (real and imaginary)
-&   |  	% element-wise
-&&  ||	% short circuit
+a == b	  % boolean equals (real and imaginary)
+a ~= b 	  % boolean NOT equals (real and imaginary)
+~(isTrue) % == isNotTrue == isFalse
+&   |     % normal/default logical operators (scalars & arrays)
+&&  ||    % short circuit  logical operators (scalar-only)
+	expr1 && expr2  % short circuit: if expr1 == false (0), expr2 not evaluated
+	expr1 || expr2  % short circuit: if expr1 == true  (1), expr2 not evaluated
 
 %%%%% char (strings & characters) %%%%%
 char() 		
@@ -76,6 +80,10 @@ char()
 sprintf();	% formats data/string into string
 	sprintf('line1\nline2') ------------> 'line1'
 	'line1\nline2' --> 'line1\nline2'     'line2'
+
+% escape characters
+'tylor''s name' --> % tylor's name
+cd /Users/tylor/Dropbox' (MIT)'/tylor' (Dropbox MIT)'/Code/matlab/
 
 %%%%% scalar math %%%%%
 % careful not to name variables the same as filenames in your project folder, or it will try to call them like functions
@@ -102,12 +110,13 @@ int16() 						uint16()
 	intmax('int16') ==  32767	intmax('uint16') == 65535
 int32() 						uint32() 
 int64() 						uint64()
-logical() 	% binary 0/1 (like java/javascript boolean false/true)
+logical() 	% binary 0/1 ~= boolean false/true
 	0 or 1
 	false = 0
 	true  = 1
 	A && B
 	A || B
+	~(isTrue) == isFalse
 
 
 %%%%%%%%%% matrices (arrays) %%%%%%%%%%
@@ -132,8 +141,8 @@ A(6) = A(2,3) 	% can treat 2x3 matrix as 1D array
 
 % get matrix
 A == A(:,:)	% get entire matrix
-A(2,3) 	% get matrix value
 A(i,j)	% get element a_ij
+A(2,3) 	% get single value
 A(3,:) 	% get row 3
 A(:,2)	% get col 2
 A(3:–1:1,2:–1:1)	% A(n:–1:1,n:–1:1) reverses A
@@ -312,14 +321,15 @@ CAN NOT do 2*c
 
 
 %%%%% struct %%%%%
+% get
+s.fieldname     % fieldname must begin with a letter (can have: letters, digits, and underscores). Max length is the value `namelengthmax` function returns.
+s.('fieldname') 
 % set
 s.fieldname = value
 s.('fieldname') = value
 s = struct('fieldname', value)
 s = struct('field1',value1,...,'fieldN',valueN)
-% get
-s.fieldname
-s.('fieldname')
+
 
 %%%%% functions %%%%%
 % careful not to name variables the same as filenames in your project folder, or it will try to call them like functions
@@ -359,7 +369,21 @@ variable_name = @(arg1, ..., argN) command involving arg1, ..., argN;
 	curt = @(x) x.^(1/3); 	% defining "cubed root" funtion
 		curt(8) == 2
 
+% lazy evaluation
+foo = @() 1+1 		% anonymous function
+bar=@()foo()*foo() 	% evaluates foo twice
+% "traditional" evaluation
+foo=1+1		% evaluates foo once
+bar=foo+foo
 
+% temporary global function
+addpath('/path/to/folder') % folder containing file "function_name.m"
+addpath('/Users/tylor/Dropbox (MIT)/tylor (Dropbox MIT)/Code/matlab/jsonlab')
+addpath(genpath('c:/matlab/myfiles')) % adds folders and sub-folders
+
+% permanent global function
+pathtool % GUI permanently
+addpath + savepath
 
 %%%%% class %%%%%
 class(x)	% = typeof() in javascript
@@ -407,7 +431,7 @@ else
    % code
 end
 
-% loops
+% for loop (1-indexed, not 0-index, means arrays/matrices start at 1, not 0)
 for i = 1:100
 	% code
 end
@@ -423,7 +447,15 @@ myMat = matfile('filename.mat')
 who(myMat) --> ['var1' 'var2' '...']
 
 %%%%%%%%%% Image Processing Toolbox %%%%%%%%%%
-isIptInstalled = license('test', 'image_toolbox'); % Image Processing Toolbox installed?
+% image import, export, convert (.png --> .jpg)
+% display, interact with image
+% crop, scale, rotate, transform image
+% color conversion (RGB --> BW or grayscale)
+% image analytics: region analysis, texture analysis, image/pixel statistics
+% spatial referencing/information
+% image registration (autmatic or control point)
+
+isIptInstalled = license('test', 'image_toolbox'); % is Image Processing Toolbox installed?
 
 % read/write image
 RGB = imread('image.jpg')
@@ -431,22 +463,8 @@ imwrite(RGB, 'output.png') 	% (.png)
 imwrite(RGB, 'output.png', 'jpg|gif|...')
 imfinfo('filename.gif')	% get file info
 
-% CutImage stuff
-load CutImage1
-R = CutImage(20:520,10:810,1);	% crop R
-G = CutImage(20:520,10:810,2);	% crop G
-B = CutImage(20:520,10:810,3);	% crop B
-G = (R+G+B)/3;					% RGB --> grayscale
-
 % display image
-imshow(G)
-
-
-% RGB (n x n x 3) --> grayscale G (n x n)
-G = grb2gray(RGB)
-% grayscale --> black/white
-threshold = graythresh(G);	% automatically calculates 
-BW = im2bw(G, threshold);	% grayscale --> black/white = binary/logical (0/1)
+imshow(RGB)
 
 % crop image
 rect = getrect		 		% waits for user to draw rectangle [xmin ymin width height]
@@ -454,11 +472,17 @@ RGB = imcrop(RGB, rect)
 % scale/resize image
 RGB = imresize(RGB, 0.9) 	% 90% resize
 
+% RGB (n x n x 3) --> grayscale G (n x n)
+G = rgb2gray(RGB)
+% grayscale --> black/white
+threshold = graythresh(G);	% automatically calculates 
+BW = im2bw(G, threshold);	% grayscale --> black/white = binary/logical (0/1)
+
 G = imcomplement 	% image negative (255-intensity), inverts surface: peaks --> valleys, valleys --> peaks
 G = imadjust(G)		% stretch image intensity to fill entire range: 0-255 (min gray to 0 (black), max gray to 255 (white))
 G = histeq(G)		% histogram equalization (improves contrast)
 
-%%%%% Analytics %%%%%
+% image analytics
 imhist(G)			% histogram of grayscale
 [centers, radii, metric] = imfindcircles(
 	G, 						% grayscale image
@@ -471,17 +495,103 @@ imhist(G)			% histogram of grayscale
 
 imdistline
 
+% CutImage stuff
+load CutImage1 					% why not use rgb2gray?
+R = CutImage(20:520,10:810,1);	% crop R
+G = CutImage(20:520,10:810,2);	% crop G
+B = CutImage(20:520,10:810,3);	% crop B
+G = (R+G+B)/3;					% RGB --> grayscale
+
+%%%%%%%%%% Computer Vision System Toolbox %%%%%%%%%%
+% video import, export, format color space, convert, display, annotate
+% feature detection/extraction: image registration, interest point detection, extracting feature descriptors, point feature matching
+% object detection, recognition, block matching, background estimation, bag of features
+% object tracking, motion estimation, optical flow, activity recognition
+% single/stero camera calibration
+% stereo vision: rectification, depth estimation, triangulation
+% structure from motion (2D images --> 3D reconstruction)
+% 3D point cloud processing: downsampling, denoising, transform, visualize, register, fit geometrical shapes of 3D point clouds
+% analysis and enhancements: statistics, FIR filtering, frequency and Hough transforms, morphology, contrast enhancement, noise removal
+
+
 %%%%%%%%%% jsonlab %%%%%%%%%% 
-% http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?jsonlab
-addpath('/Users/tylor/Dropbox (MIT)/tylor (Dropbox MIT)/Code/matlab/jsonlab/');
-data = loadjson('filename.json')
->> {a:1}
-savejson('',data)
->> {a:1}
-savejson('ty',data)
->> {
-	ty: {a:1}
-   }
+% newer (v1.2): https://github.com/fangq/jsonlab
+% older (v1.0): http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?jsonlab
+addpath('/Users/tylor/Dropbox (MIT)/tylor (Dropbox MIT)/Code/matlab/jsonlab/'); % temporarily (for current matlab session)
+savepath % permanently
+pathtool % GUI permanently
+
+%%%% loadjson (JSON --> MATLAB) %%%%
+obj = loadjson('file.json'); % filename 
+obj = loadjson('{"b":1}');   % json
+%loadjson: options
+loadjson(string,options) % if (string has '{' or '['), then string interpretted as json, else
+loadjson(string,'option1',value1,'option2',value2,...)
+%		  json 				   matlab
+loadjson('{...}'         ) >>  struct()   
+loadjson('[...]'         ) >>  {...} cell 
+loadjson('{"a":{...}   }') >>  a: struct()
+loadjson('{"a":[...]   }') >>  a: {...} cell
+loadjson('{"a":null    }') >>  a: [] empty matrix
+loadjson('{"a":true    }') >>  a: 1 logical
+loadjson('{"a":false   }') >>  a: 0 logical
+loadjson('{"a":"_NaN_" }') >>  a: NaN
+loadjson('{"a":"_Inf_" }') >>  a: Inf
+loadjson('{"a":"-_Inf_"}') >>  a:-Inf
+loadjson('{}')   >> % Error using loadjson (line #). Input file does not exist
+loadjson('[]')   >> % Error using loadjson (line #). Input file does not exist
+loadjson('[[]]') >> % Error using reshape. Size arguments must be real integers...
+loadjson('[1,2]')         >> 1 2 % row matrix
+loadjson('[[1],[2]]')     >> 1   % column matrix
+							 2
+loadjson('[[1,2],[3,4]]') >> 1 2 % square matrix
+							 3 4
+
+%%%% savejson (MATLAB --> JSON) %%%%
+string = savejson('',obj) % obj  = MATLAB object (cell, struct, matrix of cells/structs/doubles/...)
+string = savejson('',obj,'ParseLogical',1) % common
+% savejson: root
+savejson(root,obj) % root = parent object to nest `obj` in
+savejson('' , ...) >>      '...'
+savejson('a', ...) >> '{"a":...}'
+%			 matlab  matlab 		  json 				  javascript
+savejson('a',struct) struct()     >> '{"a":{...}   }' >>  obj.a --> {...} % Object
+savejson('a',{...} ) cell         >> '{"a":[...]   }' >>  obj.a --> [...] % Array
+savejson('a',[...] ) matrix       >> '{"a":[...]   }' >>  obj.a --> [...] % Array
+savejson('a',[]    ) empty matrix >> '{"a":null    }' >>  obj.a --> null  % (valid json)
+savejson('a',1     ) logical      >> '{"a":true    }' >>  obj.a --> true  % Boolean (only if: 'ParseLogical' = 1)
+savejson('a',0     ) logical      >> '{"a":false   }' >>  obj.a --> false % Boolean (only if: 'ParseLogical' = 1)
+savejson('a',NaN   )              >> '{"a":"_NaN_" }' >>  obj.a --> '_NaN_'  % NaN       is NOT valid json
+savejson('a',Inf   )              >> '{"a":"_Inf_" }' >>  obj.a --> '_Inf_'  % Infinity  is NOT valid json
+savejson('a',-Inf  )              >> '{"a":"-_Inf_"}' >>  obj.a --> '-_Inf_' % -Infinity is NOT valid json
+% save json: options														 % undefined is NOT valid json
+savejson(root,obj,'file.json') 				 % filename
+savejson(root,obj,'FileName','file.json',...)% options
+savejson(root,obj, options)			 		 % options
+	options = struct()
+	options.FileName     = 'file.json'
+	options.ParseLogical = (0) % javascript Boolean --> matlab Logical --> javascript Number (0|1)
+	options.ParseLogical =  1  % javascript Boolean --> matlab Logical --> javascript Boolean
+	options.SingletArray = (0) % (drops Array) javascript Array with 1 Number|Boolean --> matlab Matrix --> javascript Number|Boolean 
+	options.SingletArray =  1  % (adds Array)  javascript Number|Boolean              --> matlab Matrix --> javascript Array with 1 Number|Boolean
+	options.Compact      = (0) % use whitespace (newlines, tabs, ...)
+	options.Compact      =  1  % don't use whitespace (newlines, tabs, ...)
+
+%%%%%%%%%% loadjson --> savejson %%%%%%%%%% 
+% pass: any length [Array] of: `null`, [String], or not-empty [Object]
+loadjson('{"a":null   }'); savejson('',ans) >> {'a':null   } % correct
+loadjson('{"a":[{...}]}'); savejson('',ans) >> {'a':[{...}]} % correct
+loadjson('{"a":[null] }'); savejson('',ans) >> {'a':[null] } % correct
+loadjson('{"a":["z"]  }'); savejson('',ans) >> {'a':['z']  } % correct
+loadjson('{"a":[]     }'); savejson('',ans) >> {'a':[]     } % correct
+% valid json escape characters
+loadjson('{"a":"a/b"  }'); savejson('',ans) >> {'a':'a\/b' } % !!! unexpected !!! escapes: \", \\, and \/ <-- valid json (but \/ isn't necessary, thus unexpected)
+% fail: single-element [Array] of: [Boolean], [Number], or empty [Object]
+loadjson('{"a":[true] }'); savejson('',ans) >> {'a':true   } % !!! incorrect !!!
+loadjson('{"a":[7]    }'); savejson('',ans) >> {'a':7      } % !!! incorrect !!!
+loadjson('{"a":[{}]   }'); savejson('',ans) >> {'a':null   } % !!! incorrect !!!
+
+ 
 
 %%%%%%%%%% 2.737 %%%%%%%%%%
 % transfer function

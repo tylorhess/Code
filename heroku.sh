@@ -14,7 +14,7 @@ $ heroku create
 $ heroku create app-name
 # 	app-name.herokuapp.com
 
-# deploy applicatio to heroku
+# deploy application to heroku
 #	$ git clone https://github.com/heroku/node-js-sample.git # "clone" repository; pull code down
 #	$ cd node-js-sample
 $ git push heroku master
@@ -31,7 +31,7 @@ $ heroku run rake db:migrate	# `$ rake db:migrate` on heroku terminal
 
 # logs
 $ heroku logs			# first 100 lines (reverse-chronological order)
-$ heroku logs -n 150	# first 150 lines (reverse-chronological order)
+$ heroku logs -n 200	# first 200 lines (max: 1500)
 $ heroku logs -t		# -t = tail
 
 # deploy to Heroku
@@ -46,3 +46,6 @@ $ heroku run rake db:migrate
 $ git push #origin master
 $ git push heroku #master
 $ heroku run rake db:migrate
+
+# for existing git repository
+$ heroku git:remote -a ping-tylor-express-server
